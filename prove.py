@@ -289,27 +289,22 @@ my_graph = Graph()
 def uploadData( path: str, graph):
         if os.path.exists(path):
             
-            # funzione per upload sullo store chiamata dopo aver processato i files?            
-            '''
-            store = SPARQLUpdateStore()
-            store.open((self.endpointUrl, self.endpointUrl))
-            '''
                     
             if path.endswith(".csv"):               
                 #funzione per upload csv
-                upload_csv_graph(path, my_graph)
+                upload_csv_graph(path, graph)
                 return True
             elif path.endswith(".json"):
                 #funzione per upload json
                 venue_df=upload_json_venuedf(path)
-                upload_json_graph(venue_df, my_graph)
-                upload_json_authors(path, my_graph)
-                upload_json_publishers(path, my_graph)
-                upload_json_references(path,my_graph)
+                upload_json_graph(venue_df, graph)
+                upload_json_authors(path, graph)
+                upload_json_publishers(path, graph)
+                upload_json_references(path,graph)
                 return True
         #return my_graph
 uploadData('../data/graph_publications.csv', my_graph)
-uploadData('../data/graph_other_data.json', my_graph)
+#uploadData('../data/graph_other_data.json', my_graph)
 print('len:', len(my_graph))
 for stmt in my_graph:
     pprint.pprint(stmt)

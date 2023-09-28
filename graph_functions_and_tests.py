@@ -66,7 +66,7 @@ PersonUri = URIRef("https://schema.org/Person")
 #-------------PROPERTIES---------------:
 
 #-------------General------------------:
-hasIdentifier = URIRef("http://purl.org/dc/terms/identifier")                   
+hasIdentifier = URIRef("https://schema.org/identifier")                   
 hasTitle = URIRef("http://purl.org/dc/terms/title")  
 
 #------Publication and its sub-classes---:
@@ -147,28 +147,29 @@ def upload_csv_graph(csvpath, graph):
                 
                 #venue_single_id = "venue-" + str(row["id"])
                 #venue_single_uri = base_url + venue_single_id
-                graph.add((URIRef(publication_single_uri), hasPublicationVenue, Literal("venue-" + str(row["id"]) ) ))
+                graph.add((URIRef(publication_single_uri), hasPublicationVenue, URIRef(base_url+"venue-" + str(row["id"]) ) )) #URIRef(base_url+"venue-" + str(row["id"])
+                graph.add((URIRef(base_url+"venue-" + str(row["id"])), hasTitle, Literal(row["publication_venue"]) )) #URIRef(base_url+"venue-" + str(row["id"])
        
         #hasPublisher
                 if row["publisher"]:
                   publisher_single_id = "publisher-" + str(row["publisher"])
                   publisher_single_uri = base_url + publisher_single_id
                 
-                  graph.add(( Literal("venue-" + str(row["id"]) ), hasPublisher, URIRef(publisher_single_uri)))
+                  graph.add(( URIRef(base_url+"venue-" + str(row["id"]) ), hasPublisher, URIRef(publisher_single_uri)))
        
 
         #Journal
                 if row["venue_type"] == "journal":
-                    graph.add(( Literal("venue-" + str(row["id"]) ), RDF.type, JournalUri))
+                    graph.add(( URIRef(base_url+"venue-" + str(row["id"]) ), RDF.type, JournalUri))
         #Book   
                 elif row["venue_type"] == "book":
-                    graph.add(( Literal("venue-" + str(row["id"]) ), RDF.type, BookUri))
+                    graph.add(( URIRef(base_url+"venue-" + str(row["id"]) ), RDF.type, BookUri))
         #Proceedings
                 elif row["venue_type"] == "proceedings":
-                    graph.add(( Literal("venue-" + str(row["id"]) ), RDF.type, ProceedingsUri))
+                    graph.add(( URIRef(base_url+"venue-" + str(row["id"]) ), RDF.type, ProceedingsUri))
 
                     if row["event"]:
-                         graph.add(( Literal("venue-" + str(row["id"]) ), hasEvent, Literal(row["event"])))
+                         graph.add((URIRef(base_url+"venue-" + str(row["id"]) ), hasEvent, Literal(row["event"])))
                    
         
         
@@ -191,8 +192,8 @@ def upload_csv_graph(csvpath, graph):
     #ProceedingsPaper   
         elif row["type"] == "proceedings-paper":
             graph.add((URIRef(publication_single_uri), RDF.type,ProceedingsPaperUri))
-        
-    return True
+    print('len after csv upload: ', len(graph))    
+    return graph
         # return true?
         
             
@@ -245,6 +246,7 @@ def upload_json_authors(jsonpath, graph):
             graph.add((URIRef(author_uri), hasGivenName, Literal(author['given'])))
             graph.add((URIRef(author_uri), hasFamilyName, Literal(author['family'])))
             graph.add((URIRef(author_uri), hasIdentifier, Literal(author['orcid'])))
+    print('len after authors graph: ',len(graph))
     return True
 
 def upload_json_publishers(jsonpath, graph):
@@ -258,6 +260,7 @@ def upload_json_publishers(jsonpath, graph):
     
         graph.add((URIRef(publisher_single_uri), hasIdentifier, Literal(id_pub)))
         graph.add((URIRef(publisher_single_uri), hasName, Literal(publisher_single['name'])))
+    print('len after publishers graph: ',len(graph))
     return True
 
 def upload_json_references(jsonpath, graph):
@@ -272,18 +275,17 @@ def upload_json_references(jsonpath, graph):
             cited_uri=base_url + 'publication-'+cited
             
             graph.add((URIRef(publication_single_uri), hasCitedPublication, URIRef(cited_uri)))
+    print('len after references graph: ',len(graph))
     return True
 
 def upload_json_venuedf(jsonpath):
     f = open(jsonpath, encoding='utf8')
     my_dict = json.load(f)
     f.close()
-    
-
     id_venues_dict = {}
 
     for doi in my_dict["venues_id"]:
-      venue_ids = "__".join(my_dict["venues_id"][doi]) #double underscore for joining venues ids in a string
+      venue_ids = " ".join(my_dict["venues_id"][doi]) #double underscore for joining venues ids in a string
     
       if venue_ids not in id_venues_dict:
         id_venues_dict[venue_ids] = {"DOIs": [doi], "InternalID": "venue-"+ str(len(id_venues_dict) + 1)}
@@ -295,8 +297,10 @@ def upload_json_venuedf(jsonpath):
 
 # Create a DataFrame from the list of dictionaries
     df = pd.DataFrame(data)
-    return df
+     
 
+    return df
+'''
 def upload_json_graph(venuedf, graph):
         for idx, row in venuedf.iterrows():
             uri_venue = base_url + row["Internal ID"] 
@@ -317,3 +321,48 @@ def upload_json_graph(venuedf, graph):
                             graph.add((URIRef(new_object), RDF.type, oggetto ))
                 # anche id       
         return True
+'''
+def upload_json_graph(venuedf, my_graph, store, endpoint):
+    #print(len(my_graph))
+    second_graph=Graph()
+    
+    for idx, row in venuedf.iterrows():
+        uri_venue = base_url + row["Internal ID"]
+
+        my_graph.add((URIRef(uri_venue), hasIdentifier, Literal(row["Venue IDs"])))
+    
+        for el in row["DOIs"]:
+            new_object = base_url + row["Internal ID"]
+
+            #for soggetto, oggetto_literal in my_graph.subject_objects(hasPublicationVenue):
+
+                #if oggetto_literal.strip() == "venue-" + str(el).strip():
+            second_graph.add(( URIRef(base_url+"publication-" + str(el).strip()), hasPublicationVenue, URIRef(base_url+"venue-"+ str(el).strip())  ))     
+                    #old_uri = URIRef(oggetto_literal)  # Convert old URI to URIRef
+            my_graph.add((URIRef(base_url+"publication-" + str(el).strip()), hasPublicationVenue, URIRef(new_object)))
+            #print(URIRef(base_url+"publication-" + str(el).strip()), hasPublicationVenue, URIRef(new_object))
+                    # Remove the corresponding triples from the triplestore
+            
+            '''        
+            #for soggetto, oggetto in my_graph.subject_objects(RDF.type):
+                #if soggetto.strip() == "venue-" + str(el).strip():
+                    
+                    #old_uri = URIRef(soggetto)  # Convert old URI to URIRef
+            my_graph.remove((old_uri, RDF.type, oggetto))
+            my_graph.add((URIRef(new_object), RDF.type, oggetto))
+
+            # Remove the corresponding triples from the triplestore
+            store.remove(old_uri, RDF.type, oggetto)
+
+            for soggetto, oggetto in my_graph.subject_objects(hasTitle):
+                if soggetto.strip() == "venue-" + str(el).strip():
+                    print('title')
+                    old_uri = URIRef(soggetto)  # Convert old URI to URIRef
+                    my_graph.remove((old_uri, hasTitle, oggetto))
+                    my_graph.add((URIRef(new_object), hasTitle, oggetto))
+
+                    # Remove the corresponding triples from the triplestore
+                    store.remove(old_uri, RDF.type, oggetto) '''
+    
+    print('len after venuedf upload: ',len(my_graph))
+    return my_graph
