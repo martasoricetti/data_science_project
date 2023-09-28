@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "data-science-project"
+version = "0.1.0"
+description = ""
+authors = ["martasoricetti <marta.soricetti@studio.unibo.it>"]
+readme = "README.md"
+packages = [{include = "data_science_project"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+rdflib = "^7.0.0"
+pandas = "^2.1.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

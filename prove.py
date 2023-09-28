@@ -19,8 +19,7 @@ base_url = "https://github.com/martasoricetti/data_science_project/"
 #--------Sub-classes of Publications---:
 JournalArticleUri = URIRef("http://purl.org/spar/fabio/JournalArticle")
 BookChapterUri = URIRef("http://purl.org/spar/fabio/BookChapter")
-ProceedingsPaperUri = URIRef("http://purl.org/spar/fabio/ProceedingsPaper") 
-
+ProceedingsPaperUri = URIRef
 #--------Sub-classes of Venues---------:
 JournalUri = URIRef("http://purl.org/spar/fabio/Journal")
 BookUri = URIRef("http://purl.org/spar/fabio/Book")

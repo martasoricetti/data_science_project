@@ -1,0 +1,6 @@
+id,title,type,publication_year,issue,volume,chapter,publication_venue,venue_type,publisher,event
+doi:10.1007/978-3-030-61244-3_6,Ontologies Supporting Research-Related Information Foraging Using Knowledge Graphs: Literature Survey And Holistic Model Mapping,book-chapter,2020,,,1,Lecture Notes In Computer Science - Knowledge Engineering And Knowledge Management,book,crossref:297,
+doi:10.1038/s41597-020-00749-y,A Detailed Open Access Model Of The Pubmed Literature,journal-article,2020,1,7,,Scientific Data,journal,crossref:297,
+doi:10.3390/proceedings2023086045,Physics of Shock and Physiological Effects on Biological Systems,proceedings-paper,2023,,,,The 15th International Conference on Hand-Arm Vibration,proceedings,crossref:45,conference
+doi:10.1162/qss_a_00023,"Opencitations, An Infrastructure Organization For Open Scholarship",journal-article,2020,1,1,,Quantitative Science Studies,journal,crossref:281,
+doi:10.1371/journal.pbio.3000385,"The Nih Open Citation Collection: A Public Access, Broad Coverage Resource",journal-article,2019,10,17,,Plos Biology,journal,crossref:340,

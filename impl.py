@@ -2,11 +2,11 @@ import os.path
 import pandas as pd
 import json
 from sqlite3 import connect
-import numpy as np
+
 
 class RelationalProcessor:
-    def __init__(self, dbPath:str = ''):
-        self.dbPath = dbPath
+    def __init__(self):
+        self.dbPath = ''
 
     def getDbPath(self):
         if self.dbPath:
@@ -19,9 +19,11 @@ class RelationalProcessor:
         else:
             return False
 
+
 class RelationalDataProcessor(RelationalProcessor):
-    def __init__(self, dbPath: str = ''):
-        super(RelationalDataProcessor, self).__init__(dbPath)
+    def __init__(self):
+        super().__init__()
+
     def uploadData(self, path: str):
         if os.path.exists(path):
             if path.endswith(".csv"):
@@ -87,11 +89,13 @@ class RelationalDataProcessor(RelationalProcessor):
                 for doi in my_dict["authors"]:
                     for author_dict in my_dict["authors"][doi]:
                         authors_list.append(author_dict)
+                # dataframe with just authors
                 df_authors = (pd.DataFrame(authors_list, columns=["orcid", "family", "given"])).drop_duplicates(
                     subset=["orcid"], ignore_index=True)
                 df_authors = df_authors.rename(
                     columns={'orcid': 'PersonId', 'family': 'familyName', 'given': 'givenName'})
                 df_authors = df_authors.fillna('')
+
                 # 1doi-more authors internal id table
                 authors = list()
                 for doi in my_dict["authors"]:
@@ -181,6 +185,17 @@ class RelationalDataProcessor(RelationalProcessor):
                 df_venue_author_journal_art = pd.merge(df_venue_journal_updated, df_doi_authorsId, how="left",
                                                        left_on="doi", right_on="doi").fillna('')
 
+
+                #table Citations
+                citing_cited = list()
+                for doi in my_dict["references"]:
+                    if my_dict["references"][doi]:
+                        for cited in my_dict["references"][doi]:
+                            dict_df = {'citing':doi,
+                                       'cited':cited}
+                            citing_cited.append(dict_df)
+                df_citing_cited = pd.DataFrame(citing_cited, columns=["citing", "cited"])
+
                 # column cites
                 references = list()
                 for doi in my_dict["references"]:
@@ -233,12 +248,14 @@ class RelationalDataProcessor(RelationalProcessor):
                     df_journal_article_final.to_sql("JournalArticle", con, if_exists="replace", index=False)
                     df_book_chapter_final.to_sql("BookChapter", con, if_exists="replace", index=False)
                     df_proceedings_paper_final.to_sql("ProceedingsPaper", con, if_exists="replace", index=False)
+                    df_citing_cited.to_sql("Citations", con, if_exists="replace", index=False)
                     con.commit()
         con.close()
 
+
 class RelationalQueryProcessor(RelationalProcessor):
     def __init__(self):
-        super(RelationalQueryProcessor, self).__init__()
+        super().__init__()
 
     def getPublicationsPublishedInYear(self, year: int):
         with connect(self.dbPath) as con:
@@ -270,51 +287,100 @@ class RelationalQueryProcessor(RelationalProcessor):
 
     def getMostCitedPublication(self):
         with connect(self.dbPath) as con:
-            query1 = """SELECT cited, COUNT(*) as citation_count FROM [References] 
-                    GROUP BY cited 
-                    ORDER BY citation_count DESC
-                    LIMIT 1;"""
+            '''The innermost subquery calculates the citation count for each unique value in the cited column of the table Citations
+            referring to it as citation_count.
+            The middle subquery then finds the maximum citation_count among all the unique values.
+            The outer query selects rows from the results of the first subquery 
+            (aliased as citation_counts) where the citation_count matches the maximum citation_count 
+            found in the middle subquery.'''
+
+            query1 = """SELECT cited, citation_count
+                    FROM (SELECT cited, COUNT(*) as citation_count FROM Citations
+                    GROUP BY cited) AS citation_counts
+                    WHERE citation_count = (
+                    SELECT MAX(citation_count) 
+                    FROM (
+                        SELECT COUNT(*) as citation_count
+                        FROM Citations
+                        GROUP BY cited
+                    ) AS max_citation_count);"""
             df_sql1 = pd.read_sql(query1, con)
-            target = str(df_sql1.iloc[0]['cited'])
-            query2 = f'SELECT * FROM JournalArticle WHERE id="{target}"'
-            query3 = f'SELECT * FROM BookChapter WHERE id="{target}"'
-            query4 = f'SELECT * FROM ProceedingsPaper WHERE id="{target}"'
+            doi_most_cited_entities = list(df_sql1['cited'])
+            query2 = 'SELECT * FROM JournalArticle WHERE id IN ({});'
+            query2 = query2.format(','.join(["'{}'".format(doi) for doi in doi_most_cited_entities]))
+            query3 = 'SELECT * FROM BookChapter WHERE id IN ({});'
+            query3 = query3.format(','.join(["'{}'".format(doi) for doi in doi_most_cited_entities]))
+            query4 = 'SELECT * FROM ProceedingsPaper WHERE id IN ({});'
+            query4 = query4.format(','.join(["'{}'".format(doi) for doi in doi_most_cited_entities]))
             df_journal_art = pd.read_sql(query2, con)
             df_book_chapter = pd.read_sql(query3, con)
             df_proceedings_paper = pd.read_sql(query4, con)
+            df_sql = pd.concat([df_journal_art, df_book_chapter, df_proceedings_paper], ignore_index=True)
+            df_sql = df_sql.fillna('')
+            df_sql['chapter'] = df_sql['chapter'].astype(str).str.replace('.0', '', regex=False)
         con.close()
-        if not df_journal_art.empty:
-            return df_journal_art
-        elif not df_book_chapter.empty:
-            return df_book_chapter
-        elif not df_proceedings_paper.empty:
-            return df_proceedings_paper
+        return df_sql
 
     def getMostCitedVenue(self):
-        df_most_cited_publication = self.getMostCitedPublication()
-        if not df_most_cited_publication.empty:
-            most_cited_venue = str(df_most_cited_publication.iloc[0]['publicationVenue'])
-            with connect(self.dbPath) as con:
-                query1 = f'SELECT * FROM Journal WHERE VenueId="{most_cited_venue}"'
-                query2 = f'SELECT * FROM Book WHERE VenueId="{most_cited_venue}"'
-                query3 = f'SELECT * FROM Proceedings WHERE VenueId="{most_cited_venue}"'
-                df_journal = pd.read_sql(query1, con)
-                df_book = pd.read_sql(query2, con)
-                df_proceedings = pd.read_sql(query3, con)
-            con.close()
-        if not df_journal.empty:
-            return df_journal
-        elif not df_book.empty:
-            return df_book
-        elif not df_proceedings.empty:
-            return df_proceedings
+        # the number of citations for a venue is typically the sum of citations across all publications
+        # that were published in that venue.
+        with connect(self.dbPath) as con:
+            query1 = """
+            SELECT cited FROM Citations GROUP BY cited
+            """
+            df_cited = pd.read_sql(query1, con)
+            list_cited = df_cited['cited']
+            query2 = 'SELECT * FROM JournalArticle WHERE id IN ({});'
+            query2 = query2.format(','.join(["'{}'".format(doi) for doi in list_cited]))
+            query3 = 'SELECT * FROM BookChapter WHERE id IN ({});'
+            query3 = query3.format(','.join(["'{}'".format(doi) for doi in list_cited]))
+            query4 = 'SELECT * FROM ProceedingsPaper WHERE id IN ({});'
+            query4 = query4.format(','.join(["'{}'".format(doi) for doi in list_cited]))
+            df_journal_art = pd.read_sql(query2, con)
+            df_book_chapter = pd.read_sql(query3, con)
+            df_proceedings_paper = pd.read_sql(query4, con)
+            df_all_cited_pub = pd.concat([df_journal_art, df_book_chapter, df_proceedings_paper], ignore_index=True)
+            df_all_cited_pub = df_all_cited_pub.fillna('')
+            df_all_cited_pub['chapter'] = df_all_cited_pub['chapter'].astype(str).str.replace('.0', '', regex=False)
+            venue_ids_cited = list(df_all_cited_pub['publicationVenue'])
+            venues_count = dict()
+            for el in venue_ids_cited:
+                if el in venues_count:
+                    venues_count[el] += 1
+                else:
+                    venues_count[el] = 1
+            max_value = max(venues_count.values())
+            most_cited_venues = []
+            for key in venues_count:
+                if venues_count[key] == max_value:
+                    most_cited_venues.append(key)
+            query5 = 'SELECT * FROM Journal WHERE VenueId IN ({});'
+            query5 = query5.format(','.join(["'{}'".format(venue_id) for venue_id in most_cited_venues]))
+            query6 = 'SELECT * FROM Book WHERE VenueId IN ({});'
+            query6 = query6.format(','.join(["'{}'".format(venue_id) for venue_id in most_cited_venues]))
+            query7 = 'SELECT * FROM Proceedings WHERE VenueId IN ({});'
+            query7 = query7.format(','.join(["'{}'".format(venue_id) for venue_id in most_cited_venues]))
+            df_journal = pd.read_sql(query5, con)
+            df_book = pd.read_sql(query6, con)
+            df_proceedings = pd.read_sql(query7, con)
+            df_sql = pd.concat([df_journal, df_book, df_proceedings], ignore_index=True)
+            df_sql = df_sql.fillna('')
+        con.close()
+        return df_sql
+
 
     def getVenuesByPublisherId(self, id: str):
         with connect(self.dbPath) as con:
             query1 = f'SELECT * FROM Journal WHERE publisher="{id}"'
+            query2 = f'SELECT * FROM Book WHERE publisher="{id}"'
+            query3 = f'SELECT * FROM Proceedings WHERE publisher="{id}"'
             df_sql1 = pd.read_sql(query1, con)
+            df_sql2 = pd.read_sql(query2, con)
+            df_sql3 = pd.read_sql(query3, con)
+            df_sql = pd.concat([df_sql1, df_sql2, df_sql3], ignore_index=True)
+            df_sql = df_sql.fillna('')
         con.close()
-        return df_sql1
+        return df_sql
 
 
     def getPublicationInVenue(self, venueId: str):
@@ -442,7 +508,7 @@ class RelationalQueryProcessor(RelationalProcessor):
         con.close()
         return new_df
 
-    def getDistinctPublisherOfPublications(self, pubIdList: list):
+    def getDistinctPublisherOfPublications(self, pubIdList:list):
         with connect(self.dbPath) as con:
             df_list = []
             for pubId in pubIdList:

@@ -1,0 +1,140 @@
+{
+  "authors": {
+    "doi:10.1162/qss_a_00023": [
+            {
+                "family": "Peroni",
+                "given": "Silvio",
+                "orcid": "0000-0003-0530-4305"
+            },
+            {
+                "family": "Shotton",
+                "given": "David",
+                "orcid": "0000-0001-5506-523X"
+            }
+        ],
+    "doi:10.1038/s41597-020-00749-y": [
+            {
+                "family": "Boyack",
+                "given": "Kevin W.",
+                "orcid": "0000-0001-7814-8951"
+            }
+        ],
+  "doi:10.1007/978-3-030-61244-3_6": [
+            {
+                "family": "Nguyen",
+                "given": "Viet Bach",
+                "orcid": "0000-0003-2709-3297"
+            },
+            {
+                "family": "Svátek",
+                "given": "Vojtěch",
+                "orcid": "0000-0002-2256-2982"
+            },
+            {
+                "family": "Rabby",
+                "given": "Gollam",
+                "orcid": "0000-0002-1212-0101"
+            },
+            {
+                "family": "Corcho",
+                "given": "Oscar",
+                "orcid": "0000-0002-9260-0753"
+            }
+        ],
+
+    "doi:10.3390/proceedings2023086045": [
+      {
+                "family": "Hans",
+                "given": "Lindell",
+                "orcid": "0000-0001-5361-440X"
+      },
+
+      {
+                "family": "Boyack",
+                "given": "Kevin W.",
+                "orcid": "0000-0001-7814-8951"
+            }
+      ],
+    "doi:10.1371/journal.pbio.3000385": [
+            {
+                "family": "Hutchins",
+                "given": "B. Ian",
+                "orcid": "0000-0001-7657-552X"
+            },
+            {
+                "family": "Baker",
+                "given": "Kirk L.",
+                "orcid": "0000-0002-9004-3041"
+            },
+            {
+                "family": "Davis",
+                "given": "Matthew T.",
+                "orcid": "0000-0002-2485-6458"
+            },
+            {
+                "family": "Diwersy",
+                "given": "Mario A.",
+                "orcid": "0000-0003-0294-2424"
+            },
+            {
+                "family": "Leicht",
+                "given": "Stephen A.",
+                "orcid": "0000-0002-6577-3106"
+            },
+            {
+                "family": "Santangelo",
+                "given": "George M.",
+                "orcid": "0000-0002-7201-3164"
+            }
+        ]
+  },
+
+  "venues_id": {
+    "doi:10.1038/s41597-020-00749-y": [
+            "issn:2052-4463"
+        ],
+    "doi:10.1007/978-3-030-61244-3_6": [
+            "isbn:9783030612436",
+            "isbn:9783030612443"
+        ],
+    "doi:10.3390/proceedings2023086045": [
+            "issn: 2504-3900"
+    ],
+    "doi:10.1162/qss_a_00023": [
+            "issn:2641-3337"
+        ],
+    "doi:10.1371/journal.pbio.3000385": [
+            "issn:1545-7885"
+        ]
+  },
+  "references": {
+    "doi:10.1038/s41597-020-00749-y": [
+            "doi:10.1162/qss_a_00023",
+            "doi:10.1371/journal.pbio.3000385"
+        ],
+
+    "doi:10.1007/978-3-030-61244-3_6": [
+            "doi:10.1162/qss_a_00023"
+        ],
+    "doi:10.1162/qss_a_00023": [],
+    "doi:10.1371/journal.pbio.3000385": []
+  },
+  "publishers": {
+    "crossref:297": {
+            "id": "crossref:297",
+            "name": "Springer Science and Business Media LLC"
+        }
+  },
+    "crossref:45": {
+      "id": "crossref:45",
+      "name": "RISE Research Institutes of Sweden"
+    },
+  "crossref:281": {
+            "id": "crossref:281",
+            "name": "MIT Press - Journals"
+        },
+  "crossref:340": {
+            "id": "crossref:340",
+            "name": "Public Library of Science (PLoS)"
+        }
+}
