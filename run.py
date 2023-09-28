@@ -16,12 +16,12 @@ from impl_graph import TriplestoreProcessor, TriplestoreDataProcessor
 rel_path = "relational.db"
 rel_dp = RelationalDataProcessor()
 rel_dp.setDbPath(rel_path)
-rel_dp.uploadData("data/relational_publications.csv")
-rel_dp.uploadData("data/relational_other_data.json")
+#rel_dp.uploadData("data/relational_publications.csv")
+#rel_dp.uploadData("data/relational_other_data.json")
 
 # Then, create the RDF triplestore (remember first to run the
 # Blazegraph instance) using the related source data
-grp_endpoint = "http://192.168.1.2:9999/blazegraph/"
+grp_endpoint = "http://10.250.13.176:9999/blazegraph/sparql"
 grp_dp = TriplestoreDataProcessor()
 grp_dp.setEndpointUrl(grp_endpoint)
 grp_dp.uploadData("data/graph_publications.csv")

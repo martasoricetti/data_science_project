@@ -25,7 +25,7 @@ from graph_functions_and_tests import upload_csv_graph, upload_on_store, upload_
 
 #---------------URIs---------------
 
-base_url = "https://github.com/martasoricetti/data_science_project"
+base_url = "https://github.com/martasoricetti/data_science_project/"
 
 #--------Publications---:
 JournalArticleUri = URIRef("http://purl.org/spar/fabio/JournalArticle")
@@ -45,7 +45,7 @@ PersonUri = URIRef("https://schema.org/Person")
 
 #-------------PROPERTIES---------------:
 
-hasIdentifier = URIRef("http://purl.org/dc/terms/identifier")                   
+hasIdentifier = URIRef("https://schema.org/identifier")                   
 hasTitle = URIRef("http://purl.org/dc/terms/title")  
 
 #------Publication + sub-classes---:
@@ -127,43 +127,146 @@ class TriplestoreProcessor:
 class TriplestoreDataProcessor(TriplestoreProcessor):
     def __init__(self, endpointUrl: str = ''):
         super(TriplestoreDataProcessor, self).__init__(endpointUrl)
+    
     def uploadData(self, path: str):
+        my_graph = Graph()
         if os.path.exists(path):
+           
+            
             store = SPARQLUpdateStore()
-            my_graph = Graph()
-            # funzione per upload sullo store chiamata dopo aver processato i files?            
-            '''
-            store = SPARQLUpdateStore()
-            store.open((self.endpointUrl, self.endpointUrl))
-            '''
-                    
-            if path.endswith(".csv"):               
-                #funzione per upload csv
-                upload_csv_graph(path, my_graph)
-
-            elif path.endswith(".json"):
-                #funzione per upload json
-                venue_df=upload_json_venuedf(path)
-                upload_json_graph(venue_df, my_graph)
-                upload_json_authors(path, my_graph)
-                upload_json_publishers(path, my_graph)
-                upload_json_references(path,my_graph)
-                #upload_on_store(store,my_graph, self.endpointUrl)
-                
-                store = SPARQLUpdateStore()
 
                 # The URL of the SPARQL endpoint is the same URL of the Blazegraph
                 # instance + '/sparql'
-                endpoint = self.endpointUrl
-
+            endpoint = self.endpointUrl
                 # It opens the connection with the SPARQL endpoint instance
-                store.open((endpoint, endpoint))
+            
+            store.open((endpoint, endpoint))
+            
+            
+            # funzione per upload sullo store chiamata dopo aver processato i files?            
+                    
+            if path.endswith(".csv"):               
+                #funzione per upload csv
 
+                csv_graph=upload_csv_graph(path, my_graph)
+                
+                for triple in csv_graph.triples((None, None, None)):
+                   store.add(triple)
+                
+                #print(len(my_graph))
+                my_graph+=csv_graph
+                print('len after csv_graph: ')
+
+            elif path.endswith(".json"): 
+                
+                venue_df=upload_json_venuedf(path)
+                for i,row in venue_df.iterrows():
+                    for el in row["DOIs"]:
+                        for s,o in my_graph.subject_objects(hasPublicationVenue):
+                            for o2 in my_graph.objects(o, hasPublisher):
+                                store.add((base_url+''+row["Internal Id"], hasPublisher,o2)) #check rows
+                   
+                json_graph=upload_json_graph(venue_df, my_graph, store, endpoint)
+                upload_json_authors(path, my_graph)
+                upload_json_publishers(path, my_graph)
+                upload_json_references(path,my_graph)
+                '''
+                for idx, row in venue_df.iterrows():
+                    for el in row["DOIs"]:
+                        new_object = base_url + row["Internal ID"]
+
+                        for soggetto, oggetto_literal in upload_json_graph(venue_df, my_graph, store, endpoint)[1].subject_objects(hasPublicationVenue):
+
+                            if oggetto_literal.strip() == "venue-" + str(el).strip():
+                                print(1) '''
+                
+
+                for soggetto, oggetto in json_graph.subject_objects(hasPublicationVenue):
+                    #for publisher in 
+                    store.remove((soggetto, hasPublicationVenue, oggetto),None)
+                    '''
+                    store.remove((oggetto, hasPublisher, None), None)
+                    store.remove((oggetto, RDF.type, None), None)
+                    store.remove((oggetto, hasTitle, None), None)
+                for i,r in venue_df.iterrows():
+                    for doi in r['DOIs']:
+                        '''
+
+
+                for triple in json_graph.triples((None, None, None)):
+                   store.add(triple)
                 for triple in my_graph.triples((None, None, None)):
                    store.add(triple)
-                    
+
+                
                 # Once finished, remeber to close the connection
                 store.close() 
-            # triple che prendono da csv e json? forse basta creare i triples dal json e dal csv con gli stessi internal id
-        print('len:',len(my_graph))
+            print('after method',len(my_graph))
+            
+            #dict for updating uris 
+            doi_venue_dict=dict()
+            for s,o in my_graph.subject_objects(hasPublicationVenue):
+                    #print (s,o)
+                    #if o not in doi_venue_dict.keys(): - 
+                    if s not in doi_venue_dict.keys():
+                        doi_venue_dict[s]=[]
+                        doi_venue_dict[s].append(o)
+                    else:
+                        doi_venue_dict[s].append(o)
+                    
+                    
+            #print(venue_dict)
+
+            #for s,o in my_graph.subject_objects(hasPublisher):
+                #print(1)
+            
+            """  #print(my_graph)
+                for s, o in my_graph.subject_objects(hasPublicationVenue):
+                            print(s,o)     
+                   
+                for idx, row in venue_df.iterrows():
+                    uri_venue = base_url + row["Internal ID"]
+                    #print(uri_venue) 
+                    my_graph.add((URIRef(uri_venue), hasIdentifier, Literal(row["Venue IDs"]) ) )
+                
+                    for el in row["DOIs"]:                        
+                        new_object = base_url + row["Internal ID"] 
+                        #print(base_url+"venue-" + str(el))
+                      
+                        
+                        
+                        for soggetto, oggetto_literal in my_graph.subject_objects(hasPublicationVenue):
+                                print(oggetto_literal)
+                                if oggetto_literal ==  base_url+"venue-" + str(el):
+                                    #print(soggetto, hasPublicationVenue, oggetto_literal)
+                                    print(5)
+                                    my_graph.remove((soggetto, hasPublicationVenue, oggetto_literal))
+                                    store.remove(soggetto, hasPublicationVenue, oggetto_literal)
+                                    my_graph.add((soggetto, hasPublicationVenue, URIRef(new_object)))
+                                    #print(soggetto, hasPublicationVenue, URIRef(new_object))
+                        for soggetto, oggetto in my_graph.subject_objects(RDF.type):       
+                        #stessa cosa per publisher e type 
+                                if soggetto == base_url+"venue-" + str(el):
+                                    print(2)
+                                    my_graph.remove((soggetto, RDF.type, oggetto))
+                                    store.remove(soggetto, RDF.type, oggetto)
+                                    my_graph.add((URIRef(new_object), RDF.type, oggetto ))      """
+                
+            #elif  path.endswith(".csv"):
+            #print(my_graph,len(my_graph))
+             
+                   #print(triple)
+                    
+                   # triple che prendono da csv e json? forse basta creare i triples dal json e dal csv con gli stessi internal id
+        #print('len:',len(my_graph))
+
+'''
+            elif path.endswith(".json"):
+                #funzione per upload json
+                #venue_df=upload_json_venuedf(path)
+                #upload_json_graph(venue_df, my_graph)
+                upload_json_authors(path, my_graph)
+                upload_json_publishers(path, my_graph)
+                upload_json_references(path,my_graph)
+                #upload_on_store(store,my_graph, self.endpointUrl)'''  
         
