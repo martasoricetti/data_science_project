@@ -13,7 +13,7 @@ from impl_graph import TriplestoreDataProcessor #, TriplestoreQueryProcessor
 # 3) Importing the class for dealing with generic queries
 #from impl_graph import GenericQueryProcessor
 
-<<<<<<< HEAD
+
 def run_software(rel_db_path, rel_csv, rel_json, grp_endpoint, grp_csv, grp_json):
 
     # Once all the classes are imported, first create the relational
@@ -22,23 +22,6 @@ def run_software(rel_db_path, rel_csv, rel_json, grp_endpoint, grp_csv, grp_json
     rel_dp.setDbPath(rel_db_path)
     rel_dp.uploadData(rel_csv)
     rel_dp.uploadData(rel_json)
-=======
-# Once all the classes are imported, first create the relational
-# database using the related source data
-rel_path = "relational.db"
-rel_dp = RelationalDataProcessor()
-rel_dp.setDbPath(rel_path)
-#rel_dp.uploadData("data/relational_publications.csv")
-#rel_dp.uploadData("data/relational_other_data.json")
-
-# Then, create the RDF triplestore (remember first to run the
-# Blazegraph instance) using the related source data
-grp_endpoint = "http://10.250.13.176:9999/blazegraph/sparql"
-grp_dp = TriplestoreDataProcessor()
-grp_dp.setEndpointUrl(grp_endpoint)
-grp_dp.uploadData("data/graph_publications.csv")
-grp_dp.uploadData("data/graph_other_data.json")
->>>>>>> 35b8b5d05ce4372b952aec555827a642811057e7
 
     # Then, create the RDF triplestore (remember first to run the
     # Blazegraph instance) using the related source data
@@ -66,7 +49,7 @@ grp_dp.uploadData("data/graph_other_data.json")
     #pprint(result_q2)
 
 if __name__ == '__main__':
-    arg_parser = ArgumentParser('run.py', description='''This script is responsible for running the entire software: it 
+    arg_parser = ArgumentParser('run2.py', description='''This script is responsible for running the entire software: it 
     instantiate the RelationalDataProcessor, RelationalQueryProcessor, TriplestoreDataProcessor, TriplestoreQueryProcessor, GenericQueryProcessor objects;
     upload the data in the two databases and makes the environment ready to query them''')
     arg_parser.add_argument('-db', '--rel_db', dest='rel_db_path', required=True,
