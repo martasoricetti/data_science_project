@@ -135,6 +135,17 @@ class TestRelational(unittest.TestCase):
 
         os.remove(self.relational_db)
 
+    def test_getPublicationInVenue(self):
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        df = rel_qp.getPublicationInVenue("isbn:9783030612443")
+        dois = list(df['id'])
+        expected_dois = ["doi:10.1007/978-3-030-61244-3_6"]
+        self.assertEqual(dois, expected_dois)
+
+        os.remove(self.relational_db)
+
+
 
 
 
