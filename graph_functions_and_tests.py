@@ -19,17 +19,8 @@ from rdflib.plugins.stores.sparqlstore import SPARQLUpdateStore
 # Creazione di un oggetto Graph
 graph = Graph()
 
-# Aggiungi alcune triple con nodi Literal
-soggetto1 = URIRef("http://example.org/soggetto1")
-soggetto2 = URIRef("http://example.org/soggetto2")
-predicato = URIRef("http://example.org/haNome")
-oggetto_literal1 = Literal("Alice")
-oggetto_literal2 = Literal("Bob")
 
-graph.add((soggetto1, predicato, oggetto_literal1))
-graph.add((soggetto2, predicato, oggetto_literal2))
-
-# Sostituisci i nodi Literal con nodi URI
+#Sostituisci i nodi Literal con nodi URI
 nuovo_oggetto_uri1 = URIRef("http://example.org/alice")
 nuovo_oggetto_uri2 = URIRef("http://example.org/bob")
 
@@ -111,6 +102,8 @@ hasFamilyName = URIRef("https://schema.org/familyName")
 #creando un dizionario invertito con gli id delle venues come chiavi e le doi come venues
 #da lì un dataframe da cui ricavare un internal id per le venues da usare negli uri
 # e da questo dataframe la relazione publication venue
+
+my_graph=Graph()
 
 def upload_csv_graph(csvpath, graph):
     df_publication = pd.read_csv(csvpath, keep_default_na=False,

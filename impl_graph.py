@@ -129,7 +129,8 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
         super(TriplestoreDataProcessor, self).__init__(endpointUrl)
     
     def uploadData(self, path: str):
-        my_graph = Graph()
+
+        from graph_functions_and_tests import my_graph
         if os.path.exists(path):
            
             
@@ -158,13 +159,34 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
                 print('len after csv_graph: ')
 
             elif path.endswith(".json"): 
-                
+                print(len(my_graph))
                 venue_df=upload_json_venuedf(path)
                 for i,row in venue_df.iterrows():
                     for el in row["DOIs"]:
                         for s,o in my_graph.subject_objects(hasPublicationVenue):
-                            for o2 in my_graph.objects(o, hasPublisher):
-                                store.add((base_url+''+row["Internal Id"], hasPublisher,o2)) #check rows
+                            if str(s).endswith(el):
+                                #print(2)
+                                store.add((s,hasPublicationVenue,(URIRef(base_url+row["Internal ID"])) ))
+                                store.remove((s,hasPublicationVenue,o), None)
+                                my_graph.remove((s,hasPublicationVenue,o))
+                                for o2 in my_graph.objects(o, hasPublisher):
+                                    #print(3)
+                                    store.add((URIRef(base_url+row["Internal ID"]), hasPublisher,o2)) #publisher
+                                    my_graph.remove((o, hasPublisher, o2))
+                                    store.remove((o, hasPublisher, o2), None)
+
+                                for tipo in my_graph.objects(o, RDF.type ):
+                                    #print('remove:',o, RDF.type, tipo, 'add:',(URIRef(base_url+row["Internal ID"]), RDF.type, tipo))
+                                    store.add((URIRef(base_url+row["Internal ID"]), RDF.type, tipo)) #type
+                                    my_graph.remove((o, RDF.type, tipo))
+                                    store.remove((o, RDF.type, tipo),None)
+
+                                for title in my_graph.objects(o, hasTitle ):
+                                    #print( o, 'venue:' base_url+row["Internal ID"], 'type', title )#title
+                                    store.add((URIRef(base_url+row["Internal ID"]), RDF.type,title)) 
+                                    my_graph.remove((o, hasTitle, title))
+                                    store.remove((o, hasTitle, title), None)
+                    
                    
                 json_graph=upload_json_graph(venue_df, my_graph, store, endpoint)
                 upload_json_authors(path, my_graph)
@@ -184,6 +206,7 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
                 for soggetto, oggetto in json_graph.subject_objects(hasPublicationVenue):
                     #for publisher in 
                     store.remove((soggetto, hasPublicationVenue, oggetto),None)
+                    #my_graph.remove(soggetto, hasPublicationVenue, oggetto)
                     '''
                     store.remove((oggetto, hasPublisher, None), None)
                     store.remove((oggetto, RDF.type, None), None)
@@ -201,7 +224,7 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
                 
                 # Once finished, remeber to close the connection
                 store.close() 
-            print('after method',len(my_graph))
+            print('after method', len(my_graph))
             
             #dict for updating uris 
             doi_venue_dict=dict()

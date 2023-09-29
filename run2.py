@@ -25,11 +25,7 @@ def run_software(rel_db_path, rel_csv, rel_json, grp_endpoint, grp_csv, grp_json
 
     # Then, create the RDF triplestore (remember first to run the
     # Blazegraph instance) using the related source data
-    '''grp_dp = TriplestoreDataProcessor()
-    grp_dp.setEndpointUrl(grp_endpoint)
-    grp_dp.uploadData(grp_csv)
-    grp_dp.uploadData(grp_json)'''
-
+    
     # In the next passage, create the query processors for both
     # the databases, using the related classes
     rel_qp = RelationalQueryProcessor()
@@ -37,6 +33,10 @@ def run_software(rel_db_path, rel_csv, rel_json, grp_endpoint, grp_csv, grp_json
 
     #grp_qp = TriplestoreQueryProcessor()
     #grp_qp.setEndpointUrl(grp_endpoint)
+    grp_dp = TriplestoreDataProcessor()
+    grp_dp.setEndpointUrl(grp_endpoint)
+    grp_dp.uploadData(grp_csv)
+    grp_dp.uploadData(grp_json)
 
     # Finally, create a generic query processor for asking
     # about data
