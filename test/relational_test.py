@@ -85,7 +85,7 @@ class TestRelational(unittest.TestCase):
         rel_qp = self.instantiateRelQP()
         df = rel_qp.getPublicationsByAuthorId('0000-0001-7814-8951')
         dois = list(df['id'])
-        expected_dois = ["doi:10.1038/s41597-020-00749-y", "doi:10.3390/proceedings2023086045"]
+        expected_dois = ["doi:10.1038/s41597-020-00749-y", "doi:10.3390/proceedings2023086045", "doi:10.1016/j.joi.2014.04.001"]
         self.assertTrue(set(dois) == set(expected_dois))
 
         os.remove(self.relational_db)
@@ -142,6 +142,95 @@ class TestRelational(unittest.TestCase):
         dois = list(df['id'])
         expected_dois = ["doi:10.1007/978-3-030-61244-3_6"]
         self.assertEqual(dois, expected_dois)
+
+        os.remove(self.relational_db)
+
+    def test_getJournalArticlesInIssue_one(self):
+        # in the column publicationVenue there is just one value
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        df = rel_qp.getJournalArticlesInIssue(issue="10", volume="17", journalId="issn:1545-7885")
+        dois = list(df['id'])
+        expected_dois = ["doi:10.1371/journal.pbio.3000385"]
+        self.assertEqual(dois, expected_dois)
+
+        os.remove(self.relational_db)
+
+    def test_getJournalArticlesInIssue_two(self):
+        # in the column publicationVenue there are two values and just one is passed as input parameter
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        df = rel_qp.getJournalArticlesInIssue(issue="22", volume="32", journalId="issn:1466-4399")
+        dois = list(df['id'])
+        expected_dois = ["doi:10.1080/09585192.2019.1661267"]
+        self.assertEqual(dois, expected_dois)
+
+        os.remove(self.relational_db)
+
+
+    def test_getJournalArticlesInVolume(self):
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        df = rel_qp.getJournalArticlesInVolume(volume="8", journalId="issn:1751-1577")
+        dois = list(df['id'])
+        expected_dois = ["doi:10.1016/j.joi.2016.05.002", "doi:10.1016/j.joi.2014.04.001"]
+        self.assertTrue(set(dois)==set(expected_dois))
+
+        os.remove(self.relational_db)
+
+
+    def test_getJournalArticlesInJournal(self):
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        df = rel_qp.getJournalArticlesInJournal(journalId="issn:2641-3337")
+        dois = list(df['id'])
+        expected_dois = ["doi:10.1162/qss_a_00023", "doi:10.1162/qss_a_00109", "doi:10.1162/qss_a_00146"]
+        self.assertTrue(set(dois) == set(expected_dois))
+
+        os.remove(self.relational_db)
+
+    def test_getProceedingsByEvent(self):
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        df = rel_qp.getProceedingsByEvent('Conf')
+        venue_ids = list(df['VenueId'])
+        expected_venues_ids = ["issn:2504-3900"]
+        self.assertTrue(set(venue_ids) == set(expected_venues_ids))
+
+        os.remove(self.relational_db)
+
+    def test_getPublicationAuthors(self):
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        df = rel_qp.getPublicationAuthors("doi:10.1371/journal.pbio.3000385")
+        authors_ids = df['PersonId']
+        expected_authors_ids = ["0000-0001-7657-552X", "0000-0002-9004-3041", "0000-0002-2485-6458", "0000-0003-0294-2424", "0000-0002-6577-3106", "0000-0002-7201-3164"]
+        self.assertTrue(set(authors_ids) == set(expected_authors_ids))
+
+        os.remove(self.relational_db)
+
+    def test_getPublicationsByAuthorName(self):
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        df = rel_qp.getPublicationsByAuthorName('av')
+        dois = df['id']
+        expected_dois = ["doi:10.1371/journal.pbio.3000385", "doi:10.1162/qss_a_00023"]
+        self.assertTrue(set(dois) == set(expected_dois))
+
+        df2 = rel_qp.getPublicationsByAuthorName('silvio peroni')
+        dois2 = df2['id']
+        expected_dois2 = ["doi:10.1162/qss_a_00023"]
+        self.assertTrue(set(dois2) == set(expected_dois2))
+
+        os.remove(self.relational_db)
+
+    def test_getDistinctPublisherOfPublications(self):
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        df = rel_qp.getDistinctPublisherOfPublications(["doi:10.1162/qss_a_00146", "doi:10.1162/qss_a_00109", "doi:10.1016/j.joi.2014.04.001"])
+        crossref_ids = df['OrganizationId']
+        expected_crossref_ids = ['crossref:78', 'crossref:281']
+        self.assertTrue(set(crossref_ids) == set(expected_crossref_ids))
 
         os.remove(self.relational_db)
 
