@@ -185,7 +185,7 @@ def upload_csv_graph(csvpath, graph):
     #ProceedingsPaper   
         elif row["type"] == "proceedings-paper":
             graph.add((URIRef(publication_single_uri), RDF.type,ProceedingsPaperUri))
-    print('len after csv upload: ', len(graph))    
+    #print('len after csv upload: ', len(graph))    
     return graph
         # return true?
         
@@ -216,7 +216,7 @@ def upload_on_store(store,graph, endpoint):
 
     for triple in graph.triples((None, None, None)):
         store.add(triple)
-        print(triple)
+        #print(triple)
     # Once finished, remeber to close the connection
     store.close()
 
@@ -239,7 +239,7 @@ def upload_json_authors(jsonpath, graph):
             graph.add((URIRef(author_uri), hasGivenName, Literal(author['given'])))
             graph.add((URIRef(author_uri), hasFamilyName, Literal(author['family'])))
             graph.add((URIRef(author_uri), hasIdentifier, Literal(author['orcid'])))
-    print('len after authors graph: ',len(graph))
+    #print('len after authors graph: ',len(graph))
     return True
 
 def upload_json_publishers(jsonpath, graph):
@@ -253,7 +253,7 @@ def upload_json_publishers(jsonpath, graph):
     
         graph.add((URIRef(publisher_single_uri), hasIdentifier, Literal(id_pub)))
         graph.add((URIRef(publisher_single_uri), hasName, Literal(publisher_single['name'])))
-    print('len after publishers graph: ',len(graph))
+    #print('len after publishers graph: ',len(graph))
     return True
 
 def upload_json_references(jsonpath, graph):
@@ -268,7 +268,7 @@ def upload_json_references(jsonpath, graph):
             cited_uri=base_url + 'publication-'+cited
             
             graph.add((URIRef(publication_single_uri), hasCitedPublication, URIRef(cited_uri)))
-    print('len after references graph: ',len(graph))
+    #print('len after references graph: ',len(graph))
     return True
 
 def upload_json_venuedf(jsonpath):
@@ -357,5 +357,5 @@ def upload_json_graph(venuedf, my_graph, store, endpoint):
                     # Remove the corresponding triples from the triplestore
                     store.remove(old_uri, RDF.type, oggetto) '''
     
-    print('len after venuedf upload: ',len(my_graph))
+    #print('len after venuedf upload: ',len(my_graph))
     return my_graph

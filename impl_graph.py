@@ -176,6 +176,7 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
                                     store.remove((o, hasPublisher, o2), None)
 
                                 for tipo in my_graph.objects(o, RDF.type ):
+                                    #print(tipo)
                                     #print('remove:',o, RDF.type, tipo, 'add:',(URIRef(base_url+row["Internal ID"]), RDF.type, tipo))
                                     store.add((URIRef(base_url+row["Internal ID"]), RDF.type, tipo)) #type
                                     my_graph.remove((o, RDF.type, tipo))
@@ -183,7 +184,7 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
 
                                 for title in my_graph.objects(o, hasTitle ):
                                     #print( o, 'venue:' base_url+row["Internal ID"], 'type', title )#title
-                                    store.add((URIRef(base_url+row["Internal ID"]), RDF.type,title)) 
+                                    store.add((URIRef(base_url+row["Internal ID"]), hasTitle,title)) 
                                     my_graph.remove((o, hasTitle, title))
                                     store.remove((o, hasTitle, title), None)
                     
