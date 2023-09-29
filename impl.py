@@ -482,10 +482,20 @@ class RelationalQueryProcessor(RelationalProcessor):
         con.close()
 
     def getPublicationsByAuthorName(self, authorPartialName: str):
-        authorPartialName = authorPartialName.lower()
         with connect(self.dbPath) as con:
-            query1 = f'SELECT * FROM Person WHERE givenName LIKE "%{authorPartialName}%" OR familyName LIKE "%{authorPartialName}%"'
-            df_sql1 = pd.read_sql(query1, con)
+            authorPartialName = authorPartialName.lower()
+            if len(authorPartialName.split(" ")) > 0:
+                names = authorPartialName.split(" ")
+                conditions = []
+                params = []
+                for name in names:
+                    conditions.append('(givenName LIKE ? OR familyName LIKE ?)')
+                    params.extend(['%' + name + '%', '%' + name + '%'])
+                query1 = 'SELECT * FROM Person WHERE ' + ' OR '.join(conditions)
+            else:
+                query1 = 'SELECT * FROM Person WHERE givenName LIKE ? OR familyName LIKE ?'
+                params = ['%' + authorPartialName + '%', '%' + authorPartialName + '%']
+            df_sql1 = pd.read_sql(query1, con, params=params)
             list_authors = df_sql1['PersonId'].to_list()
             df_list = []
             for author_id in list_authors:
@@ -510,49 +520,36 @@ class RelationalQueryProcessor(RelationalProcessor):
 
     def getDistinctPublisherOfPublications(self, pubIdList:list):
         with connect(self.dbPath) as con:
-            df_list = []
-            for pubId in pubIdList:
-                query1 = f'SELECT publicationVenue FROM JournalArticle WHERE id="{pubId}"'
-                query2 = f'SELECT publicationVenue FROM BookChapter WHERE id="{pubId}"'
-                query3 = f'SELECT publicationVenue FROM ProceedingsPaper WHERE id="{pubId}"'
-                df_sql1 = pd.read_sql(query1, con)
-                df_sql2 = pd.read_sql(query2, con)
-                df_sql3 = pd.read_sql(query3, con)
-                if not df_sql1.empty:
-                    df_list.append(df_sql1)
-                if not df_sql2.empty:
-                    df_list.append(df_sql2)
-                if not df_sql3.empty:
-                    df_list.append(df_sql3)
-            new_df = pd.concat(df_list, ignore_index=True)
-            venues_set = set(new_df['publicationVenue'].to_list())
+            query1 = 'SELECT publicationVenue FROM JournalArticle WHERE id IN ({});'
+            query1 = query1.format(','.join(["'{}'".format(pub_id) for pub_id in pubIdList]))
+            query2 = 'SELECT publicationVenue FROM BookChapter WHERE id IN ({});'
+            query2 = query2.format(','.join(["'{}'".format(pub_id) for pub_id in pubIdList]))
+            query3 = 'SELECT publicationVenue FROM ProceedingsPaper WHERE id IN ({});'
+            query3 = query3.format(','.join(["'{}'".format(pub_id) for pub_id in pubIdList]))
+            df_sql1 = pd.read_sql(query1, con)
+            df_sql2 = pd.read_sql(query2, con)
+            df_sql3 = pd.read_sql(query3, con)
+            new_df = pd.concat([df_sql1, df_sql2, df_sql3], ignore_index=True)
+            venues_set = set(new_df['publicationVenue'])
             venues_list = list(venues_set)
-            df_venue_list = []
-            for value in venues_list:
-                for venue_id in value.split(' '):
-                    query4 = f'SELECT publisher FROM Journal WHERE VenueId = "{venue_id}"'
-                    query5 = f'SELECT publisher FROM Book WHERE VenueId = "{venue_id}"'
-                    query6 = f'SELECT publisher FROM Proceedings WHERE VenueId = "{venue_id}"'
-                    df_sql4 = pd.read_sql(query4, con)
-                    df_sql5 = pd.read_sql(query5, con)
-                    df_sql6 = pd.read_sql(query6, con)
-                    if not df_sql4.empty:
-                        df_venue_list.append(df_sql4)
-                    if not df_sql5.empty:
-                        df_venue_list.append(df_sql5)
-                    if not df_sql6.empty:
-                        df_venue_list.append(df_sql6)
-            df_publisher = pd.concat(df_venue_list, ignore_index=True)
-            publisher_set = set(df_publisher['publisher'].to_list())
+            query4 = 'SELECT publisher FROM Journal WHERE VenueId IN ({});'
+            query4 = query4.format(','.join(["'{}'".format(venue_id) for venue_id in venues_list]))
+            query5 = 'SELECT publisher FROM Book WHERE VenueId IN ({});'
+            query5 = query5.format(','.join(["'{}'".format(venue_id) for venue_id in venues_list]))
+            query6 = 'SELECT publisher FROM Proceedings WHERE VenueId IN ({});'
+            query6 = query6.format(','.join(["'{}'".format(venue_id) for venue_id in venues_list]))
+            df_sql4 = pd.read_sql(query4, con)
+            df_sql5 = pd.read_sql(query5, con)
+            df_sql6 = pd.read_sql(query6, con)
+            df_publisher = pd.concat([df_sql4, df_sql5, df_sql6], ignore_index=True)
+            publisher_set = set(df_publisher['publisher'])
             publisher_list = list(publisher_set)
-            df_organization = list()
-            for publisher in publisher_list:
-                query7 = f'SELECT * FROM Organization WHERE OrganizationId = "{publisher}"'
-                df_sql7 = pd.read_sql(query7, con)
-                df_organization.append(df_sql7)
-            last_df = pd.concat(df_organization, ignore_index=True)
+            query7 = 'SELECT * FROM Organization WHERE OrganizationId IN ({});'
+            query7 = query7.format(','.join(["'{}'".format(org_id) for org_id in publisher_list]))
+            df_sql7 = pd.read_sql(query7, con)
+
         con.close()
-        return last_df
+        return df_sql7
 
 
 

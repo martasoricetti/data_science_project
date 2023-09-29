@@ -145,6 +145,27 @@
                 "given": "Yong",
                 "orcid": "0000-0001-5953-6908"
             }
+        ],
+    "doi:10.1080/09585192.2019.1661267": [
+            {
+                "family": "Andersen",
+                "given": "Njål",
+                "orcid": "0000-0003-4234-1543"
+            }
+        ],
+    "doi:10.1016/j.joi.2014.04.001": [
+            {
+                "family": "Boyack",
+                "given": "Kevin W.",
+                "orcid": "0000-0001-7814-8951"
+            }
+        ],
+    "doi:10.1016/j.joi.2016.05.002": [
+            {
+                "family": "Guler",
+                "given": "Arzu Tugce",
+                "orcid": "0000-0002-6043-7824"
+            }
         ]
   },
 
@@ -157,7 +178,7 @@
             "isbn:9783030612443"
         ],
     "doi:10.3390/proceedings2023086045": [
-            "issn: 2504-3900"
+            "issn:2504-3900"
     ],
     "doi:10.1162/qss_a_00023": [
             "issn:2641-3337"
@@ -170,8 +191,18 @@
     ],
     "doi:10.1162/qss_a_00146": [
             "issn:2641-3337"
-        ]
+        ],
 
+    "doi:10.1080/09585192.2019.1661267": [
+            "issn:0958-5192",
+            "issn:1466-4399"
+        ],
+    "doi:10.1016/j.joi.2016.05.002": [
+            "issn:1751-1577"
+        ],
+    "doi:10.1016/j.joi.2014.04.001": [
+            "issn:1751-1577"
+        ]
   },
   "references": {
     "doi:10.1038/s41597-020-00749-y": [
@@ -190,14 +221,17 @@
     "doi:10.1371/journal.pbio.3000385": [
             "doi:10.1162/qss_a_00109",
             "doi:10.1162/qss_a_00146"
-    ]
+    ],
+    "doi:10.1080/09585192.2019.1661267": [],
+    "doi:10.1016/j.joi.2014.04.001": [],
+    "doi:10.1016/j.joi.2016.05.002": []
+
   },
   "publishers": {
     "crossref:297": {
             "id": "crossref:297",
             "name": "Springer Science and Business Media LLC"
-        }
-  },
+        },
     "crossref:45": {
       "id": "crossref:45",
       "name": "RISE Research Institutes of Sweden"
@@ -209,6 +243,14 @@
   "crossref:340": {
             "id": "crossref:340",
             "name": "Public Library of Science (PLoS)"
+        },
+  "crossref:301": {
+            "id": "crossref:301",
+            "name": "Informa UK Limited"
+        },
+  "crossref:78": {
+            "id": "crossref:78",
+            "name": "Elsevier BV"
         }
-
+  }
 }
