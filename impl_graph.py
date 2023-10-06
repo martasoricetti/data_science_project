@@ -217,7 +217,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
     
     def getPublicationsPublishedInYear(self, year: int):
     # La variabile "year" è definita come argomento della funzione, quindi è accessibile qui
-        query = ["PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
+        query= ["PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
                  "PREFIX schema:<https://schema.org/>",
                  "PREFIX cito:<http://purl.org/spar/cito/>", 
                  "prefix dcterms:<http://purl.org/dc/terms/>",  
@@ -343,7 +343,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         stringa_au_cit = ("".join(query_authors_and_cited))
         df_sparql3=get(self.endpointUrl, stringa_au_cit, True)
         df_sparql=pd.merge(df_sparql2,df_sparql3, on='id')
-
+        df_sparql = df_sparql.fillna('')
 
         return df_sparql
     
@@ -379,6 +379,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
             ]
         stringa = ("".join(query2))
         df_sparql2=get(self.endpointUrl, stringa, True)
+        df_sparql2 = df_sparql2.fillna('')
 
         return df_sparql2
     
@@ -398,6 +399,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                """]
         stringa = ("".join(query))
         df_sparql=get(self.endpointUrl, stringa, True)
+        df_sparql = df_sparql.fillna('')
         return df_sparql
     
 
@@ -438,6 +440,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         stringa_au_cit = ("".join(query_authors_and_cited))
         df_sparql2=get(self.endpointUrl, stringa_au_cit, True)
         df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
+        df_sparql = df_sparql.fillna('')
 
         #filter per la stringa da cercare dentro l'id delle venues
 
@@ -483,6 +486,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         stringa_au_cit = ("".join(query_authors_and_cited))
         df_sparql2=get(self.endpointUrl, stringa_au_cit, True)
         df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
+        df_sparql = df_sparql.fillna('')
         return df_sparql
     
     def getJournalArticlesInVolume(self, volume: str, journalId: str):
@@ -527,6 +531,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         stringa_au_cit = ("".join(query_authors_and_cited))
         df_sparql2=get(self.endpointUrl, stringa_au_cit, True)
         df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
+        df_sparql = df_sparql.fillna('')
         return df_sparql
     
     def getJournalArticlesInJournal(self, journalId: str):
@@ -569,7 +574,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         stringa_au_cit = ("".join(query_authors_and_cited))
         df_sparql2=get(self.endpointUrl, stringa_au_cit, True)
         df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
-
+        df_sparql = df_sparql.fillna('')
         #filter per la stringa da cercare dentro l'id delle venues
 
         return df_sparql
@@ -588,6 +593,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
 
             stringa = ("".join(query))
             df_sparql=get(self.endpointUrl, stringa, True)
+            df_sparql = df_sparql.fillna('')
             return df_sparql
 
     def getPublicationAuthors(self, publicationId: str):
@@ -607,6 +613,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
             """]
         stringa = ("".join(query))
         df_sparql=get(self.endpointUrl, stringa, True)
+        df_sparql = df_sparql.fillna('')
         return df_sparql
 
     def getPublicationsByAuthorName(self, authorPartialName: str):
@@ -669,6 +676,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
         df_sparql=df_sparql.drop_duplicates() 
         #drop duplicates per non ripetere le pubblicazioni che hanno più di un autore che fa match con la stringa
+        df_sparql = df_sparql.fillna('')
         return df_sparql
     
     def getDistinctPublisherOfPublications(self, pubIdList:list):
@@ -695,5 +703,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
             stringa=(" ".join(query))
             df_final = get (self.endpointUrl, stringa,  True)
             #df_final.drop_duplicates(subset="organizationID", keep="first", inplace=True)
+            df_final = df_final.fillna('')
             df = concat([df, df_final], ignore_index=True)
+        
         return df

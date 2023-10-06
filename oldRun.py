@@ -42,6 +42,7 @@ generic = GenericQueryProcessor()
 generic.addQueryProcessor(rel_qp)
 generic.addQueryProcessor(grp_qp)'''
 
-result_q1 = grp_qp.getDistinctPublisherOfPublications(['doi:10.1093/nar/gky1131', 'doi:10.3390/info12040160', 'doi:10.1016/j.xgen.2021.100031'])
+#result_q1 = grp_qp.getPublicationInVenue('issn:0219-1377')
+result_q1 = grp_qp.getPublicationsByAuthorName('marx')
 
 pprint(result_q1)
