@@ -36,7 +36,7 @@ for soggetto, oggetto_literal in graph.subject_objects(predicato):
 
 #---------------URIs---------------
 #--------------baseurl-------------
-base_url = "https://github.com/martasoricetti/data_science_project/"
+base_url = "https://sparkle_db/"
 
 #--------Sub-classes of Publications---:
 JournalArticleUri = URIRef("http://purl.org/spar/fabio/JournalArticle")
@@ -145,18 +145,18 @@ def upload_csv_graph(csvpath, graph):
        
         #hasPublisher
                 if row["publisher"]:
-                  publisher_single_id = "publisher-" + str(row["publisher"])
+                  publisher_single_id = str(row["publisher"])
                   publisher_single_uri = base_url + publisher_single_id
                 
-                  graph.add(( URIRef(base_url+"venue-" + str(row["id"]) ), hasPublisher, URIRef(publisher_single_uri)))
+                  graph.add(( URIRef(base_url+"venue-" + str(row["id"])), hasPublisher, URIRef(publisher_single_uri)))
        
 
         #Journal
                 if row["venue_type"] == "journal":
-                    graph.add(( URIRef(base_url+"venue-" + str(row["id"]) ), RDF.type, JournalUri))
+                    graph.add(( URIRef(base_url+"venue-" + str(row["id"])), RDF.type, JournalUri))
         #Book   
                 elif row["venue_type"] == "book":
-                    graph.add(( URIRef(base_url+"venue-" + str(row["id"]) ), RDF.type, BookUri))
+                    graph.add(( URIRef(base_url+"venue-" + str(row["id"])), RDF.type, BookUri))
         #Proceedings
                 elif row["venue_type"] == "proceedings":
                     graph.add(( URIRef(base_url+"venue-" + str(row["id"]) ), RDF.type, ProceedingsUri))
@@ -248,7 +248,7 @@ def upload_json_publishers(jsonpath, graph):
     f.close()
     for crossref in my_dict.get('publishers'):
         publisher_single= my_dict['publishers'].get(crossref)
-        id_pub="publisher-" + publisher_single['id']
+        id_pub= publisher_single['id']
         publisher_single_uri = base_url + id_pub
     
         graph.add((URIRef(publisher_single_uri), hasIdentifier, Literal(id_pub)))

@@ -8,7 +8,8 @@ from rdflib import URIRef
 from rdflib import RDF
 from rdflib import Literal
 from rdflib.plugins.stores.sparqlstore import SPARQLUpdateStore
-
+from sparql_dataframe import get
+from pandas import concat
 from graph_functions_and_tests import upload_csv_graph, upload_on_store, upload_json_authors, upload_json_publishers, upload_json_references, upload_json_venuedf, upload_json_graph
 
 #Publication
@@ -25,7 +26,7 @@ from graph_functions_and_tests import upload_csv_graph, upload_on_store, upload_
 
 #---------------URIs---------------
 
-base_url = "https://github.com/martasoricetti/data_science_project/"
+base_url = "https://sparkle_db/"
 
 #--------Publications---:
 JournalArticleUri = URIRef("http://purl.org/spar/fabio/JournalArticle")
@@ -75,37 +76,9 @@ hasGivenName = URIRef("https://schema.org/givenName")
 hasFamilyName = URIRef("https://schema.org/familyName")       
 
 
-#funzioni per le venues:
-#aprire csv, estrarre le venues , creare un internal id per le venues e unirlo al dataframe .
-#poi usare l'internal id per creare 
-#gli uri e metterli in un dizionario
-#poi col json creare un altro dataframe che ha gli id delle venues collegati ad ogni doi.
-#funzione per unire i dataframe, ha in input le due funzioni precedenti
-#unire il dataframe del json a quello del csv con gli internal id delle venues tramite le doi
-#su questo dataframe si può iterare per creare i triples con attributi e relazioni delle venues
-# NO ASP, FORSE QUESTO DISCORSO VA FATTO CON LE PUBLICATIONS? 
-#visto che il loro internal id è per ora l'idx
-#sennò devo usare la doi
-#vabbè uso la doi
 
-          
 
 #----------UPLOAD FUNCTIONS-----------
-
-#separare le venues in una funzione a parte per controllare il numero di triple? 
-# print("-- Number of triples added to the graph after processing venues and publications")
-#print(len(my_graph))
-
-
-
-
-
-#def upload_json_graph():
-#def test_upload_json_graph():
-
-#Triplestore
-
-
 
 class TriplestoreProcessor:
     def __init__(self, endpointUrl:str = ''):
@@ -156,32 +129,39 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
                 
                 #print(len(my_graph))
                 my_graph+=csv_graph
-                print('len after csv_graph: ')
+                #print('len after csv_graph: ')
 
             elif path.endswith(".json"): 
-                print(len(my_graph))
+                #print(len(my_graph))
                 venue_df=upload_json_venuedf(path)
+                #------------venue substitutions---------------------------------------------------
                 for i,row in venue_df.iterrows():
                     for el in row["DOIs"]:
                         for s,o in my_graph.subject_objects(hasPublicationVenue):
                             if str(s).endswith(el):
-                                #print(2)
+                                
                                 store.add((s,hasPublicationVenue,(URIRef(base_url+row["Internal ID"])) ))
                                 store.remove((s,hasPublicationVenue,o), None)
                                 my_graph.remove((s,hasPublicationVenue,o))
+                                #event
+                                for event in my_graph.objects(o,hasEvent):
+                                    store.add(((URIRef(base_url+row["Internal ID"])),hasEvent, event))
+                                    store.remove((o, hasEvent, event), None)
+                                    my_graph.remove((o, hasEvent, event))
+                                #publisher
                                 for o2 in my_graph.objects(o, hasPublisher):
-                                    #print(3)
+                                    
                                     store.add((URIRef(base_url+row["Internal ID"]), hasPublisher,o2)) #publisher
                                     my_graph.remove((o, hasPublisher, o2))
                                     store.remove((o, hasPublisher, o2), None)
-
+                                #type
                                 for tipo in my_graph.objects(o, RDF.type ):
-                                    #print(tipo)
+                                    
                                     #print('remove:',o, RDF.type, tipo, 'add:',(URIRef(base_url+row["Internal ID"]), RDF.type, tipo))
                                     store.add((URIRef(base_url+row["Internal ID"]), RDF.type, tipo)) #type
                                     my_graph.remove((o, RDF.type, tipo))
                                     store.remove((o, RDF.type, tipo),None)
-
+                                #title
                                 for title in my_graph.objects(o, hasTitle ):
                                     #print( o, 'venue:' base_url+row["Internal ID"], 'type', title )#title
                                     store.add((URIRef(base_url+row["Internal ID"]), hasTitle,title)) 
@@ -193,28 +173,14 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
                 upload_json_authors(path, my_graph)
                 upload_json_publishers(path, my_graph)
                 upload_json_references(path,my_graph)
-                '''
-                for idx, row in venue_df.iterrows():
-                    for el in row["DOIs"]:
-                        new_object = base_url + row["Internal ID"]
-
-                        for soggetto, oggetto_literal in upload_json_graph(venue_df, my_graph, store, endpoint)[1].subject_objects(hasPublicationVenue):
-
-                            if oggetto_literal.strip() == "venue-" + str(el).strip():
-                                print(1) '''
+                
                 
 
                 for soggetto, oggetto in json_graph.subject_objects(hasPublicationVenue):
                     #for publisher in 
                     store.remove((soggetto, hasPublicationVenue, oggetto),None)
                     #my_graph.remove(soggetto, hasPublicationVenue, oggetto)
-                    '''
-                    store.remove((oggetto, hasPublisher, None), None)
-                    store.remove((oggetto, RDF.type, None), None)
-                    store.remove((oggetto, hasTitle, None), None)
-                for i,r in venue_df.iterrows():
-                    for doi in r['DOIs']:
-                        '''
+                    
 
 
                 for triple in json_graph.triples((None, None, None)):
@@ -225,7 +191,7 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
                 
                 # Once finished, remeber to close the connection
                 store.close() 
-            print('after method', len(my_graph))
+            #print('after method', len(my_graph))
             
             #dict for updating uris 
             doi_venue_dict=dict()
@@ -244,53 +210,490 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
             #for s,o in my_graph.subject_objects(hasPublisher):
                 #print(1)
             
-            """  #print(my_graph)
-                for s, o in my_graph.subject_objects(hasPublicationVenue):
-                            print(s,o)     
-                   
-                for idx, row in venue_df.iterrows():
-                    uri_venue = base_url + row["Internal ID"]
-                    #print(uri_venue) 
-                    my_graph.add((URIRef(uri_venue), hasIdentifier, Literal(row["Venue IDs"]) ) )
-                
-                    for el in row["DOIs"]:                        
-                        new_object = base_url + row["Internal ID"] 
-                        #print(base_url+"venue-" + str(el))
-                      
-                        
-                        
-                        for soggetto, oggetto_literal in my_graph.subject_objects(hasPublicationVenue):
-                                print(oggetto_literal)
-                                if oggetto_literal ==  base_url+"venue-" + str(el):
-                                    #print(soggetto, hasPublicationVenue, oggetto_literal)
-                                    print(5)
-                                    my_graph.remove((soggetto, hasPublicationVenue, oggetto_literal))
-                                    store.remove(soggetto, hasPublicationVenue, oggetto_literal)
-                                    my_graph.add((soggetto, hasPublicationVenue, URIRef(new_object)))
-                                    #print(soggetto, hasPublicationVenue, URIRef(new_object))
-                        for soggetto, oggetto in my_graph.subject_objects(RDF.type):       
-                        #stessa cosa per publisher e type 
-                                if soggetto == base_url+"venue-" + str(el):
-                                    print(2)
-                                    my_graph.remove((soggetto, RDF.type, oggetto))
-                                    store.remove(soggetto, RDF.type, oggetto)
-                                    my_graph.add((URIRef(new_object), RDF.type, oggetto ))      """
-                
-            #elif  path.endswith(".csv"):
-            #print(my_graph,len(my_graph))
-             
-                   #print(triple)
-                    
-                   # triple che prendono da csv e json? forse basta creare i triples dal json e dal csv con gli stessi internal id
-        #print('len:',len(my_graph))
+class TriplestoreQueryProcessor(TriplestoreProcessor):
+    def __init__(self):
+        super().__init__()
 
-'''
-            elif path.endswith(".json"):
-                #funzione per upload json
-                #venue_df=upload_json_venuedf(path)
-                #upload_json_graph(venue_df, my_graph)
-                upload_json_authors(path, my_graph)
-                upload_json_publishers(path, my_graph)
-                upload_json_references(path,my_graph)
-                #upload_on_store(store,my_graph, self.endpointUrl)'''  
+    
+    def getPublicationsPublishedInYear(self, year: int):
+    # La variabile "year" è definita come argomento della funzione, quindi è accessibile qui
+        query = ["PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
+                 "PREFIX schema:<https://schema.org/>",
+                 "PREFIX cito:<http://purl.org/spar/cito/>", 
+                 "prefix dcterms:<http://purl.org/dc/terms/>",  
+                 "prefix fabio:<http://purl.org/spar/fabio/>", 
+                 "SELECT ?publication ?id ?title ?publicationVenue" , 
+                 "WHERE { ?publication schema:datePublished " ,str(year), ".", 
+                 "?publication schema:identifier ?id.",
+                 "?publication dcterms:title ?title.",                
+                 "OPTIONAL{?publication schema:isPartOf ?publicationVenue.}",
+                 
+                 "}"]
+        query_authors_and_cited=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                    PREFIX schema: <https://schema.org/>
+                                    PREFIX cito:<http://purl.org/spar/cito/>
+                                    prefix dcterms: <http://purl.org/dc/terms/> 
+                                    prefix fabio: <http://purl.org/spar/fabio/> 
+                                    SELECT ?publication (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
+                                    WHERE { ?publication schema:datePublished """ ,str(year), ".", 
+                                        """?publication schema:author ?author_single .
+                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                            OPTIONAL{?publication schema:isPartOf ?publicationVenue.}
+                                        }
+                                    GROUP BY ?publication 
+                                    """]
+        stringa = (" ".join(query))
+        stringa2=(" ".join(query_authors_and_cited))
+        df_sparql1 = get(self.endpointUrl, stringa, True)
+        #df_sparql1=df_sparql1.drop_duplicates()
+        df_sparql2=get(self.endpointUrl, stringa2, True)
+        df_sparql=pd.merge(df_sparql1,df_sparql2, on="publication")
+        df_sparql = df_sparql.fillna('')
+        return df_sparql
+    
+    def getPublicationsByAuthorId(self, id: str):
+        query=[ """PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                    PREFIX schema: <https://schema.org/>
+                                    PREFIX cito:<http://purl.org/spar/cito/>
+                                    prefix dcterms: <http://purl.org/dc/terms/> 
+                                    prefix fabio: <http://purl.org/spar/fabio/> 
+            SELECT  ?publication ?id ?title ?publicationVenue ?publication_year 
+            WHERE{?publication schema:author ?author.
+                  ?author schema:identifier """ ,str("'"+id+"'"), """.
+                  ?publication schema:datePublished ?publication_year.         
+                  ?publication schema:identifier ?id.
+                  ?publication dcterms:title ?title.
+                   OPTIONAL {?publication schema:isPartOf ?publicationVenue.}
+               }                                                           """
+               
+
+        ]
+        query_authors_and_cited=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                    PREFIX schema: <https://schema.org/>
+                                    PREFIX cito:<http://purl.org/spar/cito/>
+                                    prefix dcterms: <http://purl.org/dc/terms/> 
+                                    prefix fabio: <http://purl.org/spar/fabio/> 
+                                    SELECT ?publication (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
+                                    WHERE {?publication schema:author ?author.
+                                            ?author schema:identifier """ ,str("'"+id+"'"), """.
+                                            ?publication schema:author ?author_single .
+                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                            OPTIONAL{?publication schema:isPartOf ?publicationVenue.}
+                                        }
+                                    GROUP BY ?publication 
+                                 """
+
+        ]
+        stringa = (" ".join(query))
+        stringa2=(" ".join(query_authors_and_cited))
+        df_sparql1 = get(self.endpointUrl, stringa, True)
+        #df_sparql1=df_sparql1.drop_duplicates()
+        df_sparql2=get(self.endpointUrl, stringa2, True)
+        df_sparql=pd.merge(df_sparql1,df_sparql2, on="publication")
+        df_sparql = df_sparql.fillna('')
+        return df_sparql
+    
+    def getMostCitedPublication(self):
+        query="""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX schema: <https://schema.org/>
+                PREFIX cito:<http://purl.org/spar/cito/>
+                prefix dcterms: <http://purl.org/dc/terms/> 
+                prefix fabio: <http://purl.org/spar/fabio/> 
+                SELECT  ?publication  (COUNT(?p) as ?citing_publications )
+            WHERE{?p cito:cites ?publication.
+                  }
+            GROUP BY ?publication
+            ORDER BY DESC(?citing_publications)
+            LIMIT 1
+            
+            """
+        df_sparql=get(self.endpointUrl, query, True)
+        #access most cited pub:
+        most_cited=df_sparql['publication'][0]
+        #retrieve pub data:
+        query2=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX schema: <https://schema.org/>
+                PREFIX cito:<http://purl.org/spar/cito/>
+                prefix dcterms: <http://purl.org/dc/terms/> 
+                prefix fabio: <http://purl.org/spar/fabio/> 
+                SELECT ?id ?publicationVenue ?publication_year ?title
+                WHERE {""", '<',str(most_cited),'> ', """schema:identifier ?id;
+                                             dcterms:title ?title;
+                                              schema:datePublished ?publication_year.""",
+                    "OPTIONAL {",'<',str(most_cited),'> ', 'schema:isPartOf ?publicationVenue.}  }'
+            ]
+        stringa = ("".join(query2))
+        df_sparql2=get(self.endpointUrl, stringa, True)
+
+        query_authors_and_cited=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                    PREFIX schema: <https://schema.org/>
+                                    PREFIX cito:<http://purl.org/spar/cito/>
+                                    prefix dcterms: <http://purl.org/dc/terms/> 
+                                    prefix fabio: <http://purl.org/spar/fabio/> 
+                                    SELECT ?id (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
+                                    WHERE {""", '<',str(most_cited),'> ',""" schema:identifier ?id;
+                                            
+                                                         schema:author ?author_single .
+
+                                            OPTIONAL{""", '<',str(most_cited),'> ',""" cito:cites ?cited_pub.}
+                                            OPTIONAL{""", '<',str(most_cited),'> ',""" schema:isPartOf ?publicationVenue.}
+                                        }
+                                    GROUP BY ?id 
+                                 """]
+        stringa_au_cit = ("".join(query_authors_and_cited))
+        df_sparql3=get(self.endpointUrl, stringa_au_cit, True)
+        df_sparql=pd.merge(df_sparql2,df_sparql3, on='id')
+
+
+        return df_sparql
+    
+    def getMostCitedVenue(self):
+        query="""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX schema: <https://schema.org/>
+                PREFIX cito:<http://purl.org/spar/cito/>
+                prefix dcterms: <http://purl.org/dc/terms/> 
+                prefix fabio: <http://purl.org/spar/fabio/> 
+                SELECT  ?publicationVenue  (COUNT(?p) as ?citing_publications )
+            WHERE{?p cito:cites ?publication.
+                  ?publication schema:isPartOf ?publicationVenue.
+                  }
+            GROUP BY ?publicationVenue
+            ORDER BY DESC(?citing_publications)
+           LIMIT 1
+            
+            """
+        df_sparql=get(self.endpointUrl,query, True)
+        most_cited=df_sparql['publicationVenue'][0]
+
+        query2=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX schema: <https://schema.org/>
+                PREFIX cito:<http://purl.org/spar/cito/>
+                prefix dcterms: <http://purl.org/dc/terms/> 
+                prefix fabio: <http://purl.org/spar/fabio/> 
+                SELECT ?VenueId ?title ?publisher ?event
+                WHERE {""", '<',str(most_cited),'> ', """schema:identifier ?VenueId;
+                                             dcterms:title ?title;
+                                              schema:publisher ?publisher.
+                        OPTIONAL{""", '<',str(most_cited),'> ', """schema:description ?event.} }"""
+                     
+            ]
+        stringa = ("".join(query2))
+        df_sparql2=get(self.endpointUrl, stringa, True)
+
+        return df_sparql2
+    
+    def getVenuesByPublisherId(self, id: str):
+        query=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX schema: <https://schema.org/>
+                PREFIX cito:<http://purl.org/spar/cito/>
+                prefix dcterms: <http://purl.org/dc/terms/> 
+                prefix fabio: <http://purl.org/spar/fabio/> 
+                SELECT ?VenueId ?title ?publisher
+               WHERE {?venue schema:publisher ?publisher.
+               ?publisher schema:identifier """, "'",str(id),"'", """.
+               ?venue dcterms:title ?title.
+               ?venue schema:identifier ?VenueId.
+               OPTIONAL{?venue schema:description ?event.}              
+               }
+               """]
+        stringa = ("".join(query))
+        df_sparql=get(self.endpointUrl, stringa, True)
+        return df_sparql
+    
+
+    #filter per la stringa da cercare dentro l'id delle venues
+    def getPublicationInVenue(self, venueId: str):
+        query=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX schema: <https://schema.org/>
+                PREFIX cito:<http://purl.org/spar/cito/>
+                prefix dcterms: <http://purl.org/dc/terms/> 
+                prefix fabio: <http://purl.org/spar/fabio/> 
+                SELECT ?publication ?id ?title ?publicationVenue
+               WHERE {?publication schema:isPartOf ?publicationVenue.
+                      ?publicationVenue schema:identifier ?VenueId.
+                      ?publication dcterms:title ?title;
+                                   schema:identifier ?id.
+               FILTER CONTAINS(?VenueId,""","'",str(venueId),"'",""") }
+                                   
+                """]
+        stringa = ("".join(query))
+        df_sparql=get(self.endpointUrl, stringa, True)
+
+        query_authors_and_cited=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                    PREFIX schema: <https://schema.org/>
+                                    PREFIX cito:<http://purl.org/spar/cito/>
+                                    prefix dcterms: <http://purl.org/dc/terms/> 
+                                    prefix fabio: <http://purl.org/spar/fabio/> 
+                                    SELECT ?publication (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
+                                    WHERE { ?publication schema:isPartOf ?publicationVenue.
+                                        ?publicationVenue schema:identifier ?VenueId.
+                                            
+                                            ?publication schema:author ?author_single .
+                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                           
+                                      FILTER CONTAINS(?VenueId,""","'",str(venueId),"'",""")  }
+                                  
+                                    GROUP BY ?publication 
+                                 """]
+        stringa_au_cit = ("".join(query_authors_and_cited))
+        df_sparql2=get(self.endpointUrl, stringa_au_cit, True)
+        df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
+
+        #filter per la stringa da cercare dentro l'id delle venues
+
+        return df_sparql
+    
+    def getJournalArticlesInIssue(self, issue: str, volume: str, journalId: str):
+        query=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX schema: <https://schema.org/>
+                PREFIX cito:<http://purl.org/spar/cito/>
+                prefix dcterms: <http://purl.org/dc/terms/> 
+                prefix fabio: <http://purl.org/spar/fabio/> 
+                SELECT ?publication ?id ?title ?publicationVenue 
+               WHERE {?publication schema:isPartOf ?publicationVenue.
+                      ?publicationVenue schema:identifier ?VenueId.
+                      ?publication dcterms:title ?title;
+                                    schema:issueNumber ""","'",str(issue),"'",""";
+                                    schema:volumeNumber""","'",str(volume),"'",""";
+                                   schema:identifier ?id.
+               FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""") }
+                                   
+                """]
+        stringa = ("".join(query))
+        df_sparql=get(self.endpointUrl, stringa, True)
+
+        query_authors_and_cited=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                    PREFIX schema: <https://schema.org/>
+                                    PREFIX cito:<http://purl.org/spar/cito/>
+                                    prefix dcterms: <http://purl.org/dc/terms/> 
+                                    prefix fabio: <http://purl.org/spar/fabio/> 
+                                    SELECT ?publication (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
+                                    WHERE { ?publication schema:isPartOf ?publicationVenue.
+                                        ?publicationVenue schema:identifier ?VenueId.
+                                            
+                                            ?publication schema:author ?author_single ;
+                                 schema:issueNumber ""","'",str(issue),"'",""";
+                                    schema:volumeNumber""","'",str(volume),"'",""";
+                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                           
+                                      FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""")  }
+                                  
+                                    GROUP BY ?publication 
+                                 """]
+        stringa_au_cit = ("".join(query_authors_and_cited))
+        df_sparql2=get(self.endpointUrl, stringa_au_cit, True)
+        df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
+        return df_sparql
+    
+    def getJournalArticlesInVolume(self, volume: str, journalId: str):
+        query=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX schema: <https://schema.org/>
+                PREFIX cito:<http://purl.org/spar/cito/>
+                prefix dcterms: <http://purl.org/dc/terms/> 
+                prefix fabio: <http://purl.org/spar/fabio/> 
+                SELECT ?publication ?id ?title ?publicationVenue ?issue
+               WHERE {?publication schema:isPartOf ?publicationVenue.
+                      ?publicationVenue schema:identifier ?VenueId.
+                      ?publication dcterms:title ?title;
+                                    
+                                    schema:volumeNumber ""","'",str(volume),"'",""";
+                                   schema:identifier ?id.
+                    OPTIONAL{?publication schema:issueNumber ?issue.}
+               FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""") }
+                                   
+                """]
+        stringa = ("".join(query))
+        df_sparql=get(self.endpointUrl, stringa, True)
+
+        query_authors_and_cited=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                    PREFIX schema: <https://schema.org/>
+                                    PREFIX cito:<http://purl.org/spar/cito/>
+                                    prefix dcterms: <http://purl.org/dc/terms/> 
+                                    prefix fabio: <http://purl.org/spar/fabio/> 
+                                    SELECT ?publication (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
+                                    WHERE { ?publication schema:isPartOf ?publicationVenue.
+                                        ?publicationVenue schema:identifier ?VenueId.
+                                            
+                                            ?publication schema:author ?author_single ;
+                                 
+                                    schema:volumeNumber ""","'",str(volume),"'",""";
+                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                            OPTIONAL{?publication schema:issueNumber ?issue.}
+                                           
+                                      FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""")  }
+                                  
+                                    GROUP BY ?publication 
+                                 """]
+        stringa_au_cit = ("".join(query_authors_and_cited))
+        df_sparql2=get(self.endpointUrl, stringa_au_cit, True)
+        df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
+        return df_sparql
+    
+    def getJournalArticlesInJournal(self, journalId: str):
+        query=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                PREFIX schema: <https://schema.org/>
+                PREFIX cito:<http://purl.org/spar/cito/>
+                prefix dcterms: <http://purl.org/dc/terms/> 
+                prefix fabio: <http://purl.org/spar/fabio/> 
+                SELECT ?publication ?id ?title ?publicationVenue ?issue ?volume
+               WHERE {?publication schema:isPartOf ?publicationVenue.
+                       ?publicationVenue rdf:type fabio:Journal.
+                      ?publicationVenue schema:identifier ?VenueId.
+                      ?publication dcterms:title ?title;
+                                   schema:identifier ?id.
+                     OPTIONAL {?publication schema:issueNumber ?issue.}
+                     OPTIONAL {?publication schema:volumeNumber ?volume.}
+               FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""") }
+                                   
+                """]
+        stringa = ("".join(query))
+        df_sparql=get(self.endpointUrl, stringa, True)
+
+        query_authors_and_cited=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                    PREFIX schema: <https://schema.org/>
+                                    PREFIX cito:<http://purl.org/spar/cito/>
+                                    prefix dcterms: <http://purl.org/dc/terms/> 
+                                    prefix fabio: <http://purl.org/spar/fabio/> 
+                                    SELECT ?publication (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
+                                    WHERE { ?publication schema:isPartOf ?publicationVenue.
+                                        ?publicationVenue schema:identifier ?VenueId.
+                                        ?publicationVenue rdf:type fabio:Journal.
+                                            
+                                            ?publication schema:author ?author_single .
+                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                           
+                                      FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""")  }
+                                  
+                                    GROUP BY ?publication 
+                                 """]
+        stringa_au_cit = ("".join(query_authors_and_cited))
+        df_sparql2=get(self.endpointUrl, stringa_au_cit, True)
+        df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
+
+        #filter per la stringa da cercare dentro l'id delle venues
+
+        return df_sparql
+     
+    def getProceedingsByEvent(self, eventPartialName: str):
+            eventPartialName = eventPartialName.lower()
+            query=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                    PREFIX schema: <https://schema.org/>
+                    PREFIX cito:<http://purl.org/spar/cito/>
+                    prefix dcterms: <http://purl.org/dc/terms/> 
+                    prefix fabio: <http://purl.org/spar/fabio/> 
+                    SELECT ?VenueId ?title ?publisher ?event
+                    WHERE {?venue schema:description ?event.
+                    FILTER CONTAINS(?VenueId,""","'",str(eventPartialName),"'",""")} 
+                    """]
+
+            stringa = ("".join(query))
+            df_sparql=get(self.endpointUrl, stringa, True)
+            return df_sparql
+
+    def getPublicationAuthors(self, publicationId: str):
+        query=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                    PREFIX schema: <https://schema.org/>
+                    PREFIX cito:<http://purl.org/spar/cito/>
+                    prefix dcterms: <http://purl.org/dc/terms/> 
+                    prefix fabio: <http://purl.org/spar/fabio/> 
+                    SELECT ?PersonId ?givenName ?familyName
+                    WHERE {
+                    ?publication schema:identifier """ ,str("'"+publicationId+"'"), """;
+                                schema:author ?author.
+                        ?author schema:givenName ?givenName;
+                                schema:familyName ?familyName;
+                                schema:identifier ?PersonId.
+                    }
+            """]
+        stringa = ("".join(query))
+        df_sparql=get(self.endpointUrl, stringa, True)
+        return df_sparql
+
+    def getPublicationsByAuthorName(self, authorPartialName: str):
+        authorPartialName = authorPartialName.lower()
+        query=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                    PREFIX schema: <https://schema.org/>
+                    PREFIX cito:<http://purl.org/spar/cito/>
+                    prefix dcterms: <http://purl.org/dc/terms/> 
+                    prefix fabio: <http://purl.org/spar/fabio/> 
+                    SELECT ?publication ?id ?title ?publicationVenue ?publication_year 
+                    WHERE {
+                      {?publication schema:author ?author;
+                               schema:identifier ?id;
+                               dcterms:title ?title;
+                               schema:datePublished  ?publication_year;
+                               schema:isPartOf ?publicationVenue.
+                     ?author schema:givenName ?givenName;
+                             schema:familyName ?familyName.
+                                                       
+                              FILTER CONTAINS( LCASE(?givenName), """, str("'"+authorPartialName+"'"), """) }
+                      UNION {?publication schema:author ?author;
+                                         schema:identifier ?id;
+                               dcterms:title ?title;
+                               schema:datePublished  ?publication_year;
+                               schema:isPartOf ?publicationVenue.
+                     ?author schema:givenName ?givenName;
+                             schema:familyName ?familyName.
+                                                       
+                              FILTER CONTAINS( LCASE(?familyName), """, str("'"+authorPartialName+"'"), """ ) }
+                      
+                        }  """ ]
+        stringa = ("".join(query))
+        df_sparql=get(self.endpointUrl, stringa, True)
+        query_authors_and_cited=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                    PREFIX schema: <https://schema.org/>
+                                    PREFIX cito:<http://purl.org/spar/cito/>
+                                    prefix dcterms: <http://purl.org/dc/terms/> 
+                                    prefix fabio: <http://purl.org/spar/fabio/> 
+                                    SELECT ?publication (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
+                                   WHERE {
+                      {?publication schema:author ?author_single.
+                     ?author_single schema:givenName ?givenName;
+                             schema:familyName ?familyName.
+                                 
+                                 
+                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                                       
+                              FILTER CONTAINS( LCASE(?givenName), """, str("'"+authorPartialName+"'"), """) }
+                      UNION {?publication schema:author ?author_single.
+                     ?author_single schema:givenName ?givenName;
+                             schema:familyName ?familyName.
+                                 OPTIONAL{?publication cito:cites ?cited_pub.}
+                                                       
+                              FILTER CONTAINS( LCASE(?familyName), """, str("'"+authorPartialName+"'"), """) }
+                      
+                      } 
+                      GROUP BY ?publication """]
+        stringa_au_cit = ("".join(query_authors_and_cited))
+        df_sparql2=get(self.endpointUrl, stringa_au_cit, True)
+        df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
+        df_sparql=df_sparql.drop_duplicates() 
+        #drop duplicates per non ripetere le pubblicazioni che hanno più di un autore che fa match con la stringa
+        return df_sparql
+    
+    def getDistinctPublisherOfPublications(self, pubIdList:list):
+        df=pd.DataFrame()
+        for inputdoi in pubIdList:
+            
+            query=['''
         
+                    PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                    PREFIX schema: <https://schema.org/>
+
+                    SELECT  ?OrganizationId ?name  
+                    
+                    WHERE {
+                    ?publication schema:identifier ''', str("'"+inputdoi+"'"),";",'''
+                               
+                                schema:isPartOf  ?publicationVenue.
+                    ?publicationVenue  schema:publisher  ?publisher.
+                    ?publisher schema:name     ?name;
+                                schema:identifier ?OrganizationId.
+
+                    }       
+                            ''']
+            stringa=(" ".join(query))
+            df_final = get (self.endpointUrl, stringa,  True)
+            #df_final.drop_duplicates(subset="organizationID", keep="first", inplace=True)
+            df = concat([df, df_final], ignore_index=True)
+        return df

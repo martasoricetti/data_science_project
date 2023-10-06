@@ -17,30 +17,31 @@ from impl_graph import *
 rel_path = "relational.db"
 rel_dp = RelationalDataProcessor()
 rel_dp.setDbPath(rel_path)
-rel_dp.uploadData("data/relational_publications.csv")
-rel_dp.uploadData("data/relational_other_data.json")
+#rel_dp.uploadData("data/relational_publications.csv")
+#rel_dp.uploadData("data/relational_other_data.json")
 
 # Then, create the RDF triplestore (remember first to run the
 # Blazegraph instance) using the related source data
-grp_endpoint =  "http://10.201.27.45:9999/blazegraph/sparql"
+grp_endpoint = "http://10.201.31.196:9999/blazegraph/sparql"
 grp_dp = TriplestoreDataProcessor()
 grp_dp.setEndpointUrl(grp_endpoint)
-grp_dp.uploadData("data/graph_publications.csv")
-grp_dp.uploadData("data/graph_other_data.json")
+#grp_dp.uploadData("data/graph_publications.csv")
+#grp_dp.uploadData("data/graph_other_data.json")
 
 # In the next passage, create the query processors for both
 # the databases, using the related classes
 rel_qp = RelationalQueryProcessor()
 rel_qp.setDbPath(rel_path)
 
-'''grp_qp = TriplestoreQueryProcessor()
+grp_qp = TriplestoreQueryProcessor()
 grp_qp.setEndpointUrl(grp_endpoint)
 # Finally, create a generic query processor for asking
 # about data
+'''
 generic = GenericQueryProcessor()
 generic.addQueryProcessor(rel_qp)
 generic.addQueryProcessor(grp_qp)'''
 
-#result_q1 = rel_qp.getPublicationsPublishedInYear(2020)
-#result_q2 = generic.getPublicationsByAuthorId("0000-0001-9857-1511")
-#pprint(result_q1)
+result_q1 = grp_qp.getDistinctPublisherOfPublications(['doi:10.1093/nar/gky1131', 'doi:10.3390/info12040160', 'doi:10.1016/j.xgen.2021.100031'])
+
+pprint(result_q1)
