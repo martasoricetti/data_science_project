@@ -354,12 +354,17 @@ class RelationalQueryProcessor(RelationalProcessor):
             for key in venues_count:
                 if venues_count[key] == max_value:
                     most_cited_venues.append(key)
+            single_venues=[]
+            for more_x in most_cited_venues:
+                splitted = more_x.split(" ")
+                for x in splitted:
+                    single_venues.append(x)
             query5 = 'SELECT * FROM Journal WHERE VenueId IN ({});'
-            query5 = query5.format(','.join(["'{}'".format(venue_id) for venue_id in most_cited_venues]))
+            query5 = query5.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
             query6 = 'SELECT * FROM Book WHERE VenueId IN ({});'
-            query6 = query6.format(','.join(["'{}'".format(venue_id) for venue_id in most_cited_venues]))
+            query6 = query6.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
             query7 = 'SELECT * FROM Proceedings WHERE VenueId IN ({});'
-            query7 = query7.format(','.join(["'{}'".format(venue_id) for venue_id in most_cited_venues]))
+            query7 = query7.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
             df_journal = pd.read_sql(query5, con)
             df_book = pd.read_sql(query6, con)
             df_proceedings = pd.read_sql(query7, con)
@@ -532,12 +537,17 @@ class RelationalQueryProcessor(RelationalProcessor):
             new_df = pd.concat([df_sql1, df_sql2, df_sql3], ignore_index=True)
             venues_set = set(new_df['publicationVenue'])
             venues_list = list(venues_set)
+            single_venues = []
+            for more_x in venues_list:
+                splitted = more_x.split(" ")
+                for x in splitted:
+                    single_venues.append(x)
             query4 = 'SELECT publisher FROM Journal WHERE VenueId IN ({});'
-            query4 = query4.format(','.join(["'{}'".format(venue_id) for venue_id in venues_list]))
+            query4 = query4.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
             query5 = 'SELECT publisher FROM Book WHERE VenueId IN ({});'
-            query5 = query5.format(','.join(["'{}'".format(venue_id) for venue_id in venues_list]))
+            query5 = query5.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
             query6 = 'SELECT publisher FROM Proceedings WHERE VenueId IN ({});'
-            query6 = query6.format(','.join(["'{}'".format(venue_id) for venue_id in venues_list]))
+            query6 = query6.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
             df_sql4 = pd.read_sql(query4, con)
             df_sql5 = pd.read_sql(query5, con)
             df_sql6 = pd.read_sql(query6, con)

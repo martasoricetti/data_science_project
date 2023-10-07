@@ -227,9 +227,9 @@ class TestRelational(unittest.TestCase):
     def test_getDistinctPublisherOfPublications(self):
         self.uploadData()
         rel_qp = self.instantiateRelQP()
-        df = rel_qp.getDistinctPublisherOfPublications(["doi:10.1162/qss_a_00146", "doi:10.1162/qss_a_00109", "doi:10.1016/j.joi.2014.04.001"])
+        df = rel_qp.getDistinctPublisherOfPublications(["doi:10.1162/qss_a_00146", "doi:10.1162/qss_a_00109", "doi:10.1016/j.joi.2014.04.001", "doi:10.1080/09585192.2019.1661267"])
         crossref_ids = df['OrganizationId']
-        expected_crossref_ids = ['crossref:78', 'crossref:281']
+        expected_crossref_ids = ['crossref:78', 'crossref:281', 'crossref:301']
         self.assertTrue(set(crossref_ids) == set(expected_crossref_ids))
 
         os.remove(self.relational_db)

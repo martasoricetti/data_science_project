@@ -194,7 +194,7 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
             #print('after method', len(my_graph))
             
             #dict for updating uris 
-            doi_venue_dict=dict()
+            doi_venue_dict = dict()
             for s,o in my_graph.subject_objects(hasPublicationVenue):
                     #print (s,o)
                     #if o not in doi_venue_dict.keys(): - 
@@ -701,7 +701,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                     }       
                             ''']
             stringa=(" ".join(query))
-            df_final = get (self.endpointUrl, stringa,  True)
+            df_final = get(self.endpointUrl, stringa,  True)
             #df_final.drop_duplicates(subset="organizationID", keep="first", inplace=True)
             df_final = df_final.fillna('')
             df = concat([df, df_final], ignore_index=True)
