@@ -42,7 +42,7 @@ generic = GenericQueryProcessor()
 generic.addQueryProcessor(rel_qp)
 generic.addQueryProcessor(grp_qp)'''
 
-#result_q1 = grp_qp.getPublicationInVenue('issn:0219-1377')
-result_q1 = grp_qp.getPublicationsByAuthorName('marx')
+result_q1 = grp_qp.getJournalArticlesInJournal('issn:0219-1377')
+#result_q1 = grp_qp.getPublicationsByAuthorName('marx')
 
 pprint(result_q1)

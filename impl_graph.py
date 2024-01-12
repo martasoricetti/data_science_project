@@ -24,61 +24,60 @@ from graph_functions_and_tests import upload_csv_graph, upload_on_store, upload_
 #Book
 #Proceedings 
 
-#---------------URIs---------------
+
 
 base_url = "https://sparkle_db/"
 
-#--------Publications---:
+
 JournalArticleUri = URIRef("http://purl.org/spar/fabio/JournalArticle")
 BookChapterUri = URIRef("http://purl.org/spar/fabio/BookChapter")
 ProceedingsPaperUri = URIRef("http://purl.org/spar/fabio/ProceedingsPaper") 
 
-#--------Venues---------:
 JournalUri = URIRef("http://purl.org/spar/fabio/Journal")
 BookUri = URIRef("http://purl.org/spar/fabio/Book")
 ProceedingsUri = URIRef("http://purl.org/spar/fabio/AcademicProceedings")
 
-#---------Publishers----------:
+
 OrganizationUri = URIRef("https://schema.org/Organization")
 
-#---------Authors-------------:
+
 PersonUri = URIRef("https://schema.org/Person")
 
-#-------------PROPERTIES---------------:
+#PROPERTIES:
 
 hasIdentifier = URIRef("https://schema.org/identifier")                   
 hasTitle = URIRef("http://purl.org/dc/terms/title")  
 
-#------Publication + sub-classes---:
+
 hasPublicationYear = URIRef("https://schema.org/datePublished")                 
 hasCited = URIRef("http://purl.org/spar/cito/cites")                            
 hasPublicationVenue = URIRef("https://schema.org/isPartOf")                     
 hasAuthor = URIRef("https://schema.org/author")                                 
 
-#-------------JournalArticle--------------:
+
 hasIssue = URIRef("https://schema.org/issueNumber")                             
 hasVolume = URIRef("https://schema.org/volumeNumber")                           
 
-#-------------BookChapter------------------:
+
 hasChapterNumber = URIRef("http://purl.org/spar/fabio/hasSequenceIdentifier")   
 
-#-------------Venue and its sub-classes----:
+
 hasPublisher = URIRef("https://schema.org/publisher")                           
 
-#-------------Proceedings------------------:
+
 hasEvent = URIRef("https://schema.org/description")                             
 
-#-------------Organization-----------------:
+
 hasName = URIRef("https://schema.org/name")                                     
 
-#-------------Person-----------------------:
+
 hasGivenName = URIRef("https://schema.org/givenName")                           
 hasFamilyName = URIRef("https://schema.org/familyName")       
 
 
 
 
-#----------UPLOAD FUNCTIONS-----------
+#UPLOAD FUNCTIONS
 
 class TriplestoreProcessor:
     def __init__(self, endpointUrl:str = ''):
@@ -194,6 +193,7 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
             #print('after method', len(my_graph))
             
             #dict for updating uris 
+            
             doi_venue_dict = dict()
             for s,o in my_graph.subject_objects(hasPublicationVenue):
                     #print (s,o)
@@ -208,7 +208,7 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
             #print(venue_dict)
 
             #for s,o in my_graph.subject_objects(hasPublisher):
-                #print(1)
+                #print(1) 
             
 class TriplestoreQueryProcessor(TriplestoreProcessor):
     def __init__(self):
@@ -701,8 +701,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                     }       
                             ''']
             stringa=(" ".join(query))
-            df_final = get(self.endpointUrl, stringa,  True)
-            #df_final.drop_duplicates(subset="organizationID", keep="first", inplace=True)
+            df_final = get (self.endpointUrl, stringa,  True)
             df_final = df_final.fillna('')
             df = concat([df, df_final], ignore_index=True)
         

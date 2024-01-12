@@ -9,99 +9,59 @@ from rdflib import RDF
 from rdflib import Literal
 from rdflib.plugins.stores.sparqlstore import SPARQLUpdateStore
 
-#CARICARE LE ENTITà VENUES E I LORO ATTRIBUTI E RELAZIONI CON DEI LITERAL PROVVISORI FORMATI DALLE DOI, POI 
-# SOSTITUIRE I LITERAL CON DEGLI URI CHE IDENTIFICANO LE VENUES TRAMITE INTERNAL ID
-# Sostituisci il nodo Literal con un nodo URI
-#nuovo_oggetto_uri = URIRef("http://example.org/alice")
-#graph.remove((soggetto, predicato, oggetto_literal))  # Rimuovi la vecchia tripla
-#graph.add((soggetto, predicato, nuovo_oggetto_uri))  # Aggiungi la nuova tripla
-'''
-# Creazione di un oggetto Graph
-graph = Graph()
-
-
-#Sostituisci i nodi Literal con nodi URI
-nuovo_oggetto_uri1 = URIRef("http://example.org/alice")
-nuovo_oggetto_uri2 = URIRef("http://example.org/bob")
-
-for soggetto, oggetto_literal in graph.subject_objects(predicato):
-    if oggetto_literal == Literal("Alice"):
-        graph.remove((soggetto, predicato, oggetto_literal))
-        graph.add((soggetto, predicato, nuovo_oggetto_uri1))
-    elif oggetto_literal == Literal("Bob"):
-        graph.remove((soggetto, predicato, oggetto_literal))
-        graph.add((soggetto, predicato, nuovo_oggetto_uri2))
-'''
-
-
-#---------------URIs---------------
-#--------------baseurl-------------
+#URIs
+#baseurl
 base_url = "https://sparkle_db/"
 
-#--------Sub-classes of Publications---:
+#Sub-classes of Publications:
 JournalArticleUri = URIRef("http://purl.org/spar/fabio/JournalArticle")
 BookChapterUri = URIRef("http://purl.org/spar/fabio/BookChapter")
 ProceedingsPaperUri = URIRef("http://purl.org/spar/fabio/ProceedingsPaper") 
 
-#--------Sub-classes of Venues---------:
+#Sub-classes of Venues:
 JournalUri = URIRef("http://purl.org/spar/fabio/Journal")
 BookUri = URIRef("http://purl.org/spar/fabio/Book")
 ProceedingsUri = URIRef("http://purl.org/spar/fabio/AcademicProceedings")
 
-#---------Class of publishers----------:
+#publishers:
 OrganizationUri = URIRef("https://schema.org/Organization")
 
-#---------Class of authors-------------:
+#authors:
 PersonUri = URIRef("https://schema.org/Person")
 
-#-------------PROPERTIES---------------:
+#PROPERTIES:
 
-#-------------General------------------:
+#common properties:
 hasIdentifier = URIRef("https://schema.org/identifier")                   
 hasTitle = URIRef("http://purl.org/dc/terms/title")  
 
-#------Publication and its sub-classes---:
+#Publication and sub-classes---:
 hasPublicationYear = URIRef("https://schema.org/datePublished")                 
 hasCitedPublication = URIRef("http://purl.org/spar/cito/cites")                            
 hasPublicationVenue = URIRef("https://schema.org/isPartOf")                     
 hasAuthor = URIRef("https://schema.org/author")                                 
 
-#-------------JournalArticle--------------:
+#JournalArticle--------------:
 hasIssue = URIRef("https://schema.org/issueNumber")                             
 hasVolume = URIRef("https://schema.org/volumeNumber")                           
 
-#-------------BookChapter------------------:
+#BookChapter------------------:
 hasChapterNumber = URIRef("http://purl.org/spar/fabio/hasSequenceIdentifier")   
 
-#-------------Venue and its sub-classes----:
+#Venue and its sub-classes----:
 hasPublisher = URIRef("https://schema.org/publisher")                           
 
-#-------------Proceedings------------------:
+#-Proceedings------------------:
 hasEvent = URIRef("https://schema.org/description")                             
 
-#-------------Organization-----------------:
+#Organization-----------------:
 hasName = URIRef("https://schema.org/name")                                     
 
-#-------------Person-----------------------:
+#Person-----------------------:
 hasGivenName = URIRef("https://schema.org/givenName")                           
 hasFamilyName = URIRef("https://schema.org/familyName")       
 
 
-#upload csv
-
-#separare le venues in una funzione a parte per controllare il numero di triple? 
-# print("-- Number of triples added to the graph after processing venues and publications")
-#print(len(my_graph))
-
-#caricare prima le venues, eventualmente con internal id, e poi le publications
-#eventualmente col metodo del prof, con i dizionari con gli internal id
-#solo che lì parte dai singoli dataframe
-#potrei usare quelli creati per il relational
-
-#forse la relazione publicationvenue va aggiunta quando si carica il json 
-#creando un dizionario invertito con gli id delle venues come chiavi e le doi come venues
-#da lì un dataframe da cui ricavare un internal id per le venues da usare negli uri
-# e da questo dataframe la relazione publication venue
 
 my_graph=Graph()
 
@@ -293,28 +253,7 @@ def upload_json_venuedf(jsonpath):
      
 
     return df
-'''
-def upload_json_graph(venuedf, graph):
-        for idx, row in venuedf.iterrows():
-            uri_venue = base_url + row["Internal ID"] 
-            graph.add((URIRef(uri_venue), hasIdentifier, Literal(row["Venue IDs"]) ) )
-            for el in row["DOIs"]:                        
-                new_object = base_url + row["Internal ID"] 
 
-                for soggetto, oggetto_literal in graph.subject_objects(hasPublicationVenue):
-                        if oggetto_literal.strip() == "venue-"+str(el).strip():
-                            #print(soggetto, hasPublicationVenue, oggetto_literal)
-                            graph.remove((soggetto, hasPublicationVenue, oggetto_literal))
-                            graph.add((soggetto, hasPublicationVenue, URIRef(new_object)))
-                            #print(soggetto, hasPublicationVenue, URIRef(new_object))
-                for soggetto, oggetto in graph.subject_objects(RDF.type):       
-                #stessa cosa per publisher e type 
-                        if soggetto.strip() == "venue-"+str(el).strip():
-                            graph.remove((soggetto, RDF.type, oggetto))
-                            graph.add((URIRef(new_object), RDF.type, oggetto ))
-                # anche id       
-        return True
-'''
 def upload_json_graph(venuedf, my_graph, store, endpoint):
     #print(len(my_graph))
     second_graph=Graph()
