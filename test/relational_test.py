@@ -237,18 +237,17 @@ class TestRelational(unittest.TestCase):
     def test_getAllOrganizations(self):
         self.uploadData()
         rel_qp = self.instantiateRelQP()
-        organizations_dict = rel_qp.getAllOrganizations()
-        for el in organizations_dict:
-            print(organizations_dict[el].getIds())
+        organization_obj = rel_qp.getOrganization('crossref:297')
+
+        print(organization_obj)
 
     def test_getPublication(self):
         self.uploadData()
         rel_qp = self.instantiateRelQP()
-        rel_qp.getAllOrganizations()
-        rel_qp.getAllVenues()
-        rel_qp.getAllAuthors()
         x = rel_qp.getPublication('doi:10.1162/qss_a_00023')
-        print(x.getCitedPublications().getIds())
+        for el in x.getAuthors():
+            print(el.getIds())
+
 
 
 

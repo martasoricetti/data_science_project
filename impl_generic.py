@@ -5,9 +5,6 @@ from classes import *
 class GenericQueryProcessor(object):
     def __init__(self, queryProcessor=[]):
         self.queryProcessor = queryProcessor
-        self.organizationsDict = dict()
-        self.venuesDict = dict()
-        self.authorsDict = dict()
 
     def cleanQueryProcessors(self):
         for obj in self.queryProcessor:
@@ -16,9 +13,7 @@ class GenericQueryProcessor(object):
 
     def addQueryProcessor(self, input):
         self.queryProcessor.append(input)
-        self.organizationsDict = input.getAllOrganizations()
-        self.venuesDict = input.getAllVenues()
-        self.authorsDict = input.getAllAuthors()
+
 
     def getPublicationsPublishedInYear(self, inputYear):
         finalresultlist = []
@@ -31,13 +26,6 @@ class GenericQueryProcessor(object):
 
         return finalresultlist
 
-        # for x in self.finalresultlist:
-        # print("the first publication is")
-        # print(x.getIds())
-        # print("cites")
-        # for y in  x.getCitedPublication():
-        #   print(y.getIds())
-        # print("---------")
 
     def getPublicationsByAuthorId(self, authorId):
         result = DataFrame()

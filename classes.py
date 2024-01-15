@@ -27,7 +27,7 @@ class Publication(IdentifiableEntity):
         self.title = title
         self.author = author
         self.publicationVenue = publicationVenue 
-        self.citedPublications= citedPublications
+        self.citedPublications = citedPublications
         super().__init__(identifier)
     
 

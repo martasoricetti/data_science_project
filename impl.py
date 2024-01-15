@@ -8,9 +8,6 @@ from classes import *
 class RelationalProcessor:
     def __init__(self):
         self.dbPath = ''
-        self.organizationsDict = dict()
-        self.venuesDict = dict()
-        self.authorsDict = dict()
 
 
     def getDbPath(self):
@@ -566,54 +563,45 @@ class RelationalQueryProcessor(RelationalProcessor):
         con.close()
         return df_sql7
 
-    def getAllOrganizations(self):
+    def getOrganization(self, crossref_id):
         with connect(self.dbPath) as con:
-            query = """ SELECT Organization.OrganizationId, Organization.name
-            FROM Organization;"""
+            query = f'SELECT OrganizationId, name FROM Organization WHERE OrganizationId="{crossref_id}";'
             df = pd.read_sql(query, con)
 
         for row_idx, row in df.iterrows():
-            x = Organization(identifier=row["OrganizationId"], name=row["name"])
-            self.organizationsDict[row["OrganizationId"]] = x
-        con.close()
-        return self.organizationsDict
+            organization_obj = Organization(identifier=row["OrganizationId"], name=row["name"])
 
-    def getAllVenues(self):
+            con.close()
+            return organization_obj
+
+    def getVenue(self, venue_id):
         with connect(self.dbPath) as con:
-            query1 = f'SELECT * FROM Journal'
-            query2 = f'SELECT * FROM Book'
-            query3 = f'SELECT * FROM Proceedings'
+            query1 = f'SELECT * FROM Journal WHERE VenueId="{venue_id}"'
+            query2 = f'SELECT * FROM Book WHERE VenueId="{venue_id}"'
+            query3 = f'SELECT * FROM Proceedings WHERE VenueId="{venue_id}"'
             df_sql1 = pd.read_sql(query1, con)
             df_sql2 = pd.read_sql(query2, con)
             df_sql3 = pd.read_sql(query3, con)
             df_sql = pd.concat([df_sql1, df_sql2, df_sql3], ignore_index=True)
             df_sql = df_sql.fillna('')
 
-
         for row_idx, row in df_sql.iterrows():
-            if row["publisher"] in self.organizationsDict:
-                crossref = self.organizationsDict[row["publisher"]]
-                x = Venue(identifiers=row["VenueId"], title=row["title"], publisher=crossref)
-                self.venuesDict[row["VenueId"]] = x
+            if "publisher" in row:
+                publisher = self.getOrganization(row["publisher"])
+                venue_obj = Venue(identifiers=row["VenueId"], title=row["title"], publisher=publisher)
 
-        con.close()
-        return self.venuesDict
+                con.close()
+                return venue_obj
 
-    def getAllAuthors(self):
+    def getAuthor(self, orcid):
         with connect(self.dbPath) as con:
-            query="""
-                    SELECT Person.givenName, Person.familyName, Person.PersonId
-                    FROM Person
-                    """
+            query = f'SELECT givenName, familyName, PersonId FROM Person WHERE PersonId="{orcid}"'
             df_final = pd.read_sql(query, con)
 
-
         for row_idx, row in df_final.iterrows():
-            x = Person(identifier=row["PersonId"], givenName=row["givenName"], familyName=row["familyName"])
-            self.authorsDict[row["PersonId"]] = x
-
-        con.close()
-        return self.authorsDict
+            person_obj = Person(identifier=row["PersonId"], givenName=row["givenName"], familyName=row["familyName"])
+            con.close()
+            return person_obj
 
     def getPublication(self, identifier):
         with connect(self.dbPath) as con:
@@ -628,28 +616,31 @@ class RelationalQueryProcessor(RelationalProcessor):
 
         for row_idx, row in df_sql.iterrows():
             venue_id = row["publicationVenue"].split(" ")[0]
-            if venue_id in self.venuesDict:
-                pub_publicationVenue = self.venuesDict[venue_id]
+            if venue_id:
+                pub_publicationVenue = self.getVenue(venue_id)
+            else:
+                pub_publicationVenue = ''
 
             authors = row["author"].split(" ")
-            pub_authors = []
-            for author in authors:
-                if author in self.authorsDict:
-                    pub_authors.append(self.authorsDict[author])
+            if authors:
+                pub_authors = []
+                for author in authors:
+                    pub_authors.append(self.getAuthor(author))
+            else:
+                pub_authors = ''
 
             cited = row["cited"].split(" ")
             if cited:
-                pub_cited_list = []
+                pub_cited = []
                 for el in cited:
-                    pub_cited = self.getPublication(el)
-                    pub_cited_list.append(pub_cited)
+                    pub_cited.append(self.getPublication(el))
             else:
                 pub_cited = ''
 
-            x = Publication(identifier=row['id'], publicationYear=row['publication_year'], title=row['title'], author=pub_authors, publicationVenue=pub_publicationVenue, citedPublications=pub_cited)
+            publication_obj = Publication(identifier=row['id'], publicationYear=row['publication_year'], title=row['title'], author=pub_authors, publicationVenue=pub_publicationVenue, citedPublications=pub_cited)
 
             con.close()
-            return x
+            return publication_obj
 
 
 
