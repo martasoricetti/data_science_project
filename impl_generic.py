@@ -5,6 +5,9 @@ from classes import *
 class GenericQueryProcessor(object):
     def __init__(self, queryProcessor=[]):
         self.queryProcessor = queryProcessor
+        self.organizationsDict = dict()
+        self.venuesDict = dict()
+        self.authorsDict = dict()
 
     def cleanQueryProcessors(self):
         for obj in self.queryProcessor:
@@ -13,25 +16,20 @@ class GenericQueryProcessor(object):
 
     def addQueryProcessor(self, input):
         self.queryProcessor.append(input)
-        input.getAllPublications()
+        self.organizationsDict = input.getAllOrganizations()
+        self.venuesDict = input.getAllVenues()
+        self.authorsDict = input.getAllAuthors()
 
     def getPublicationsPublishedInYear(self, inputYear):
-        result = DataFrame()
-        self.finalresultlist = []
+        finalresultlist = []
 
         for processor in self.queryProcessor:
             q = processor.getPublicationsPublishedInYear(inputYear)
-            result = concat([result, q], ignore_index=True)
+            for row_idx, row in q.iterrows():
+                pub_object = processor.getPublication(row['id'])
+                finalresultlist.append(pub_object)
 
-        # removing the NaN
-        result = result.fillna("")
-        result.drop_duplicates(subset="doi", keep="first", inplace=True)
-
-        for row_idx, row in result.iterrows():
-            if row["doi"] in Publications_dict:
-                self.finalresultlist.append(Publications_dict[row["doi"]])
-
-        return self.finalresultlist
+        return finalresultlist
 
         # for x in self.finalresultlist:
         # print("the first publication is")
