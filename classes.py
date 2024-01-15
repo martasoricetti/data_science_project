@@ -1,9 +1,13 @@
+
+Publications_dict=dict()
+
 class IdentifiableEntity(object):
+
     def __init__(self, identifiers):
-        self.id = set(identifiers)
+        self.id = identifiers
     
     def getIds(self):
-        return list(self.id)
+        return self.id
 
 class Person(IdentifiableEntity):
     def __init__(self, identifier, givenName, familyName):
@@ -121,3 +125,4 @@ class Organization(IdentifiableEntity):
 
     def getName(self):
         return self.name
+

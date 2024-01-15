@@ -234,18 +234,21 @@ class TestRelational(unittest.TestCase):
 
         os.remove(self.relational_db)
 
+    def test_getAllOrganizations(self):
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        organizations_dict = rel_qp.getAllOrganizations()
+        for el in organizations_dict:
+            print(organizations_dict[el].getIds())
 
-
-
-
-
-
-
-
-
-
-
-
+    def test_getPublication(self):
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        rel_qp.getAllOrganizations()
+        rel_qp.getAllVenues()
+        rel_qp.getAllAuthors()
+        x = rel_qp.getPublication('doi:10.1162/qss_a_00023')
+        print(x.getCitedPublications().getIds())
 
 
 

@@ -2,11 +2,16 @@ import os.path
 import pandas as pd
 import json
 from sqlite3 import connect
+from classes import *
 
 
 class RelationalProcessor:
     def __init__(self):
         self.dbPath = ''
+        self.organizationsDict = dict()
+        self.venuesDict = dict()
+        self.authorsDict = dict()
+
 
     def getDbPath(self):
         if self.dbPath:
@@ -560,6 +565,106 @@ class RelationalQueryProcessor(RelationalProcessor):
 
         con.close()
         return df_sql7
+
+    def getAllOrganizations(self):
+        with connect(self.dbPath) as con:
+            query = """ SELECT Organization.OrganizationId, Organization.name
+            FROM Organization;"""
+            df = pd.read_sql(query, con)
+
+        for row_idx, row in df.iterrows():
+            x = Organization(identifier=row["OrganizationId"], name=row["name"])
+            self.organizationsDict[row["OrganizationId"]] = x
+        con.close()
+        return self.organizationsDict
+
+    def getAllVenues(self):
+        with connect(self.dbPath) as con:
+            query1 = f'SELECT * FROM Journal'
+            query2 = f'SELECT * FROM Book'
+            query3 = f'SELECT * FROM Proceedings'
+            df_sql1 = pd.read_sql(query1, con)
+            df_sql2 = pd.read_sql(query2, con)
+            df_sql3 = pd.read_sql(query3, con)
+            df_sql = pd.concat([df_sql1, df_sql2, df_sql3], ignore_index=True)
+            df_sql = df_sql.fillna('')
+
+
+        for row_idx, row in df_sql.iterrows():
+            if row["publisher"] in self.organizationsDict:
+                crossref = self.organizationsDict[row["publisher"]]
+                x = Venue(identifiers=row["VenueId"], title=row["title"], publisher=crossref)
+                self.venuesDict[row["VenueId"]] = x
+
+        con.close()
+        return self.venuesDict
+
+    def getAllAuthors(self):
+        with connect(self.dbPath) as con:
+            query="""
+                    SELECT Person.givenName, Person.familyName, Person.PersonId
+                    FROM Person
+                    """
+            df_final = pd.read_sql(query, con)
+
+
+        for row_idx, row in df_final.iterrows():
+            x = Person(identifier=row["PersonId"], givenName=row["givenName"], familyName=row["familyName"])
+            self.authorsDict[row["PersonId"]] = x
+
+        con.close()
+        return self.authorsDict
+
+    def getPublication(self, identifier):
+        with connect(self.dbPath) as con:
+            query1 = f'SELECT * FROM JournalArticle WHERE id="{identifier}"'
+            query2 = f'SELECT * FROM BookChapter WHERE id="{identifier}"'
+            query3 = f'SELECT * FROM ProceedingsPaper WHERE id="{identifier}"'
+            df_sql1 = pd.read_sql(query1, con)
+            df_sql2 = pd.read_sql(query2, con)
+            df_sql3 = pd.read_sql(query3, con)
+            df_sql = pd.concat([df_sql1, df_sql2, df_sql3], ignore_index=True)
+            df_sql = df_sql.fillna('')
+
+        for row_idx, row in df_sql.iterrows():
+            venue_id = row["publicationVenue"].split(" ")[0]
+            if venue_id in self.venuesDict:
+                pub_publicationVenue = self.venuesDict[venue_id]
+
+            authors = row["author"].split(" ")
+            pub_authors = []
+            for author in authors:
+                if author in self.authorsDict:
+                    pub_authors.append(self.authorsDict[author])
+
+            cited = row["cited"].split(" ")
+            if cited:
+                pub_cited_list = []
+                for el in cited:
+                    pub_cited = self.getPublication(el)
+                    pub_cited_list.append(pub_cited)
+            else:
+                pub_cited = ''
+
+            x = Publication(identifier=row['id'], publicationYear=row['publication_year'], title=row['title'], author=pub_authors, publicationVenue=pub_publicationVenue, citedPublications=pub_cited)
+
+            con.close()
+            return x
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
