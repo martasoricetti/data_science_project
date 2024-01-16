@@ -365,6 +365,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
             """
         df_sparql=get(self.endpointUrl,query, True)
         most_cited=df_sparql['publicationVenue'][0]
+        cited=df_sparql.iloc[0]['citing_publications']
 
         query2=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                 PREFIX schema: <https://schema.org/>
@@ -380,8 +381,9 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
             ]
         stringa = ("".join(query2))
         df_sparql2=get(self.endpointUrl, stringa, True)
+        #df_sparql_merge=pd.merge(df_sparql,df_sparql2, on='VenueId')
         df_sparql2 = df_sparql2.fillna('')
-
+        df_sparql2['cited']=cited
         return df_sparql2
     
     def getVenuesByPublisherId(self, id: str):
@@ -411,8 +413,9 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                 PREFIX cito:<http://purl.org/spar/cito/>
                 prefix dcterms: <http://purl.org/dc/terms/> 
                 prefix fabio: <http://purl.org/spar/fabio/> 
-                SELECT ?publication ?id ?title ?publicationVenue
-               WHERE {?publication schema:isPartOf ?publicationVenue.
+                SELECT ?publication ?id ?title ?publicationVenue ?publication_year
+               WHERE {?publication schema:isPartOf ?publicationVenue;
+                          schema:datePublished ?publication_year.
                       ?publicationVenue schema:identifier ?VenueId.
                       ?publication dcterms:title ?title;
                                    schema:identifier ?id.
@@ -453,8 +456,9 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                 PREFIX cito:<http://purl.org/spar/cito/>
                 prefix dcterms: <http://purl.org/dc/terms/> 
                 prefix fabio: <http://purl.org/spar/fabio/> 
-                SELECT ?publication ?id ?title ?publicationVenue 
-               WHERE {?publication schema:isPartOf ?publicationVenue.
+                SELECT ?publication ?id ?title ?publicationVenue  ?publication_year
+               WHERE {?publication schema:isPartOf ?publicationVenue;
+                                  schema:datePublished ?publication_year.
                       ?publicationVenue schema:identifier ?VenueId.
                       ?publication dcterms:title ?title;
                                     schema:issueNumber ""","'",str(issue),"'",""";
@@ -496,8 +500,9 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                 PREFIX cito:<http://purl.org/spar/cito/>
                 prefix dcterms: <http://purl.org/dc/terms/> 
                 prefix fabio: <http://purl.org/spar/fabio/> 
-                SELECT ?publication ?id ?title ?publicationVenue ?issue
-               WHERE {?publication schema:isPartOf ?publicationVenue.
+                SELECT ?publication ?id ?title ?publicationVenue ?issue ?publication_year
+               WHERE {?publication schema:isPartOf ?publicationVenue;
+                        schema:datePublished ?publication_year.
                       ?publicationVenue schema:identifier ?VenueId.
                       ?publication dcterms:title ?title;
                                     
@@ -541,8 +546,9 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                 PREFIX cito:<http://purl.org/spar/cito/>
                 prefix dcterms: <http://purl.org/dc/terms/> 
                 prefix fabio: <http://purl.org/spar/fabio/> 
-                SELECT ?publication ?id ?title ?publicationVenue ?issue ?volume
-               WHERE {?publication schema:isPartOf ?publicationVenue.
+                SELECT ?publication ?id ?title ?publicationVenue ?issue ?volume ?publication_year
+               WHERE {?publication schema:isPartOf ?publicationVenue;
+               schema:datePublished ?publication_year.
                        ?publicationVenue rdf:type fabio:Journal.
                       ?publicationVenue schema:identifier ?VenueId.
                       ?publication dcterms:title ?title;
@@ -734,14 +740,16 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
 
     def getAuthor(self, orcid):
             query=f'PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>  PREFIX schema: <https://schema.org/>  PREFIX cito:<http://purl.org/spar/cito/> prefix dcterms: <http://purl.org/dc/terms/>  prefix fabio: <http://purl.org/spar/fabio/> SELECT ?internalID ?givenName ?familyName WHERE{{ ?internalID schema:givenName ?givenName. ?internalID schema:familyName ?familyName. ?internalID  schema:identifier "{orcid}".}}'
-                
+                 
             df_final = get (self.endpointUrl, query, True)
+            #if df_final:
             df_final = df_final.fillna('')
             for row_idx, row in df_final.iterrows():
                 person_obj = Person(identifier=orcid, givenName=row["givenName"], familyName=row["familyName"])
               
                 return person_obj
         
+    
     def getPublication(self, id):
         
             query = f'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX schema: <https://schema.org/> PREFIX cito:<http://purl.org/spar/cito/> prefix dcterms: <http://purl.org/dc/terms/> prefix fabio: <http://purl.org/spar/fabio/>  SELECT ?internalID ?id ?title ?publicationVenue ?publication_year ?author ?cited WHERE{{ ?internalID schema:identifier "{id}";   schema:author ?authoruri;  dcterms:title ?title; schema:datePublished  ?publication_year;  schema:isPartOf ?publicationVenueuri. ?publicationVenueuri schema:identifier ?publicationVenue. ?authoruri schema:identifier ?author. OPTIONAL{{?internalID cito:cites ?cited_pub. ?cited_pub schema:identifier ?cited.}}  }}'
@@ -776,3 +784,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
 
             
             return publication_obj
+
+            
+  
+   
