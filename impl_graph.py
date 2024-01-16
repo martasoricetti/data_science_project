@@ -12,6 +12,8 @@ from sparql_dataframe import get
 from pandas import concat
 from graph_functions_and_tests import upload_csv_graph, upload_on_store, upload_json_authors, upload_json_publishers, upload_json_references, upload_json_venuedf, upload_json_graph
 
+
+from classes import *
 #Publication
 #Person
 #IdentifiableEntity
@@ -57,7 +59,6 @@ hasAuthor = URIRef("https://schema.org/author")
 
 hasIssue = URIRef("https://schema.org/issueNumber")                             
 hasVolume = URIRef("https://schema.org/volumeNumber")                           
-
 
 hasChapterNumber = URIRef("http://purl.org/spar/fabio/hasSequenceIdentifier")   
 
@@ -213,7 +214,6 @@ class TriplestoreDataProcessor(TriplestoreProcessor):
 class TriplestoreQueryProcessor(TriplestoreProcessor):
     def __init__(self):
         super().__init__()
-
     
     def getPublicationsPublishedInYear(self, year: int):
     # La variabile "year" è definita come argomento della funzione, quindi è accessibile qui
@@ -706,3 +706,72 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
             df = concat([df, df_final], ignore_index=True)
         
         return df
+    
+    
+    def getOrganization(self, crossref_id):
+        
+        query= f'PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX schema: <https://schema.org/> PREFIX cito:<http://purl.org/spar/cito/> prefix dcterms: <http://purl.org/dc/terms/> prefix fabio: <http://purl.org/spar/fabio/> SELECT  ?name WHERE{{?internalID rdf:type schema:Organization. ?internalID schema:name ?name. ?internalID  schema:identifier "{crossref_id}".}}'
+        df_final = get (self.endpointUrl, query, True)
+        df_final = df_final.fillna('')
+        for row_idx, row in df_final.iterrows():
+            organization_obj = Organization(identifier=crossref_id, name=row["name"])
+
+            
+        return organization_obj
+        
+    def getVenue(self, venue_id):
+        #VALUES ?type {{fabio:Book fabio:Journal schema:AcademicProceedings}} ?internalID rdf:type ?type.
+        query_1 = f'PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX schema: <https://schema.org/> PREFIX cito:<http://purl.org/spar/cito/> prefix dcterms: <http://purl.org/dc/terms/>  prefix fabio: <http://purl.org/spar/fabio/> SELECT ?internalID ?VenueId ?title ?publisher WHERE{{ ?internalID schema:identifier ?VenueId;   schema:name ?title; schema:publisher ?publisheruri. ?publisheruri schema:identifier ?publisher. FILTER CONTAINS(?VenueId, "{venue_id}") }}'
+        df_final_venues = get (self.endpointUrl, query_1, True)
+        df_final_venues = df_final_venues.fillna('')
+        for row_idx,row in df_final_venues.iterrows():
+            if "publisher" in row:
+                publisher = self.getOrganization(row["publisher"])
+            venue_obj=Venue(identifiers=row["VenueId"], title= row["title"], publisher= publisher)
+            return venue_obj
+        
+
+        def getAuthor(self, orcid):
+            query=f'PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>  PREFIX schema: <https://schema.org/>  PREFIX cito:<http://purl.org/spar/cito/> prefix dcterms: <http://purl.org/dc/terms/>  prefix fabio: <http://purl.org/spar/fabio/> SELECT ?internalID ?givenName ?familyName WHERE{{?internalID rdf:type schema:Person. ?internalID schema:givenName ?givenName. ?internalID schema:familyName ?familyName. ?internalID  schema:identifier "{orcid}".}}'
+                
+            df_final = get (self.endpointUrl, query, True)
+            df_final = df_final.fillna('')
+            for row_idx, row in df_final.iterrows():
+                person_obj = Person(identifier=orcid, givenName=row["givenName"], familyName=row["familyName"])
+              
+                return person_obj
+        
+        def getPublication(self, id):
+        
+            query = f'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX schema: <https://schema.org/> PREFIX cito:<http://purl.org/spar/cito/> prefix dcterms: <http://purl.org/dc/terms/> prefix fabio: <http://purl.org/spar/fabio/>  SELECT ?internalID ?id ?title ?publicationVenue ?publication_year ?author WHERE{{ ?internalID schema:identifier "{id}";   schema:author ?authoruri;  dcterms:title ?title; schema:datePublished  ?publication_year;  schema:isPartOf ?publicationVenueuri. ?publicationVenue schema:identifier ?publicationVenue. ?authoruri schema:identifier ?author. OPTIONAL{{?internalID cito:cites ?cited_pub. ?cited_pub schema:identifier ?cited.}}  }}'
+            df_final = get (self.endpointUrl, query, True)
+            df_final = df_final.fillna('')
+            pub_authors = []
+            pub_cited=[]
+            venue_id=df_final.iloc[0]["publicationVenue"].split(" ")[0]
+            pubyear=df_final.iloc[0]["publication_year"]
+            title=df_final.iloc[0]["title"]
+            if venue_id:
+                    pub_publicationVenue = self.getVenue(venue_id)
+            else:
+                    pub_publicationVenue = ''
+
+            for row_idx, row in df_final.iterrows():
+                author = row["author"]
+                if author:
+                    pub_authors.append(self.getAuthor(author))
+                #else:
+                    #pub_authors = ''
+                cited= row['cited']
+                if cited:
+                    pub_cited.append(self.getPublication(cited))
+                
+            if len(pub_authors)== 0:
+                  pub_authors = '{}'.format(pub_authors)
+            if len(pub_cited)== 0:
+                  pub_cited = '{}'.format(pub_cited)
+
+            publication_obj = Publication(identifier=id, publicationYear=pubyear, title=title, author=pub_authors, publicationVenue=pub_publicationVenue, citedPublications=pub_cited)
+
+            
+            return publication_obj
