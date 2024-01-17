@@ -114,7 +114,7 @@ class GenericQueryProcessor(object):
             
         
     def getJournalArticlesInIssue(self, inputIssue, inputVolume, inputVenueId):
-        result = DataFrame()
+        
         finalresultlist = []
 
         for processor in self.queryProcessor:
@@ -123,87 +123,83 @@ class GenericQueryProcessor(object):
             
 
             for row_idx, row in q.iterrows():
+                    
+                    pub_obj=processor.getPublication(row['id'])
                 
-                    x = JournalArticle(identifiers=row["id"], title=row["title"], publicationYear=row["publication_ear"],
-                                    author=Publications_dict[row["doi"]].getAuthors(),
-                                    publicationVenue=Publications_dict[row["doi"]].getPublicationVenue(),
-                                    citedpublication=Publications_dict[row["doi"]].getCitedPublication(),
-                                    issue=row["issue"], volume=row["volume"])
-                    finalresultlist.append(x)
-
+                    article = JournalArticle(identifier=row["id"], title=row["title"], publicationYear=row["publication_year"],
+                                    author=pub_obj.getAuthors(),
+                                    publicationVenue=pub_obj.getPublicationVenue(),
+                                    citedPublications=pub_obj.getCitedPublications(),
+                                    issue=str(inputIssue), volume=str(inputVolume))
+                    finalresultlist.append(article) 
+        
         return finalresultlist
         # return result
         # for x in self.finalresultlist:
         # print(x, x.getPublicationVenue())
 
     def getJournalArticlesInVolume(self, inputVolume, inputVenueId):
-        result = DataFrame()
-        self.finalresultlist = []
+        
+        finalresultlist = []
 
         for processor in self.queryProcessor:
             q = processor.getJournalArticlesInVolume(inputVolume, inputVenueId)
 
-            result = concat([result, q], ignore_index=True)
+            for row_idx, row in q.iterrows():
+                    
+                    pub_obj=processor.getPublication(row['id'])
+                
+                    article = JournalArticle(identifier=row["id"], title=row["title"], publicationYear=row["publication_year"],
+                                    author=pub_obj.getAuthors(),
+                                    publicationVenue=pub_obj.getPublicationVenue(),
+                                    citedPublications=pub_obj.getCitedPublications(),
+                                    issue=row["issue"], volume=str(inputVolume))
+                    finalresultlist.append(article) 
 
-        # removing the NaN
-        result = result.fillna("")
-        result.drop_duplicates(subset="doi", keep="first", inplace=True)
+           
+        return finalresultlist
 
-        for row_idx, row in result.iterrows():
-            if row["doi"] in Publications_dict:
-                x = JournalArticle(identifiers=row["doi"], title=row["title"], publicationYear=row["publicationYear"],
-                                   author=Publications_dict[row["doi"]].getAuthors(),
-                                   publicationVenue=Publications_dict[row["doi"]].getPublicationVenue(),
-                                   citedpublication=Publications_dict[row["doi"]].getCitedPublication(),
-                                   issue=row["issue"], volume=row["volume"])
-                self.finalresultlist.append(x)
-        # return result
-        return self.finalresultlist
+    def getJournalArticlesInJournal(self, inputVenueId):
 
-    def getJournalArticlesInJournal(self, inputvenueid):
-        result = DataFrame()
-        self.finalresultlist = []
+        finalresultlist = []
 
         for processor in self.queryProcessor:
-            q = processor.getJournalArticlesInJournal(inputvenueid)
-            result = concat([result, q], ignore_index=True)
-        # removing the NaN
-        result = result.fillna("")
-        result.drop_duplicates(subset="doi", keep="first", inplace=True)
+            q = processor.getJournalArticlesInJournal(self, inputVenueId)
 
-        for row_idx, row in result.iterrows():
-            if row["doi"] in Publications_dict:
-                x = JournalArticle(identifiers=row["doi"], title=row["title"], publicationYear=row["publicationYear"],
-                                   author=Publications_dict[row["doi"]].getAuthors(),
-                                   publicationVenue=Publications_dict[row["doi"]].getPublicationVenue(),
-                                   citedpublication=Publications_dict[row["doi"]].getCitedPublication(),
-                                   issue=row["issue"], volume=row["volume"])
-                self.finalresultlist.append(x)
-        return self.finalresultlist
+            for row_idx, row in q.iterrows():
+                    
+                    pub_obj=processor.getPublication(row['id'])
+                
+                    article = JournalArticle(identifier=row["id"], title=row["title"], publicationYear=row["publication_year"],
+                                    author=pub_obj.getAuthors(),
+                                    publicationVenue=pub_obj.getPublicationVenue(),
+                                    citedPublications=pub_obj.getCitedPublications(),
+                                    issue=row["issue"], volume=str(row['volume']) )
+
+                    finalresultlist.append(article)
+
+           
+        return finalresultlist
+       
         # for x in self.finalresultlist:
         #   print(x.getIds(), x.getAuthors())
 
     def getProceedingsByEvent(self, inputEvent):
-        result = DataFrame()
-        self.finalresultlist = []
-        unified_dict = dict()
-        for processor in self.queryProcessor:
-            venue_first_dict = processor.getAllOrganizations()
-            unified_dict.update(venue_first_dict)
+        
+        finalresultlist = []
+        
+        
         for processor in self.queryProcessor:
             q = processor.getProceedingsByEvent(inputEvent)
-            result = concat([result, q], ignore_index=True)
-        # removing the NaN
-        result = result.fillna("")
-        result.drop_duplicates(subset="venueID", keep="first", inplace=True)
-        for row_idx, row in result.iterrows():
-            x = Proceedings(identifiers=row["venueID"], title=row["title"], publisher=unified_dict[row["publisherID"]],
-                            event=row["event"])
-            self.finalresultlist.append(x)
+            
+        #result.drop_duplicates(subset="venueID", keep="first", inplace=True)
+            for row_idx, row in q.iterrows():
+                proceedings_obj = Proceedings(identifiers=row["VenueId"], title=row["title"], publisher=[row["publisher"]], event=row["event"])
+                finalresultlist.append(proceedings_obj)
 
         # for x in self.finalresultlist:
         # print(x, x.getPublicationVenue())
-        return self.finalresultlist
+        return finalresultlist
 
     def getPublicationAuthors(self, inputPubId):
         finalresultlist = []
@@ -232,7 +228,7 @@ class GenericQueryProcessor(object):
                 finalresultlist.append(pub_object)
 
         # return result
-        return self.finalresultlist
+        return finalresultlist
 
     def getDistinctPublisherOfPublications(self, inputList):
         
@@ -246,4 +242,4 @@ class GenericQueryProcessor(object):
                 finalresultlist.append(publisher_object)
 
         # return result
-        return self.finalresultlist
+        return finalresultlist

@@ -51,11 +51,11 @@ class Publication(IdentifiableEntity):
 
 
 class JournalArticle(Publication):
-    def __init__(self, id, publicationYear, title, author, publicationVenue, issue, volume, citedPublications):
+    def __init__(self, identifier, publicationYear, title, author, publicationVenue, issue, volume, citedPublications):
         self.issue = issue
         self.volume = volume
         
-        super().__init__(id, publicationYear, title, author, publicationVenue, citedPublications)
+        super().__init__(identifier, publicationYear, title, author, publicationVenue, citedPublications)
 
     def getIssue(self):
         if self.issue != '':      #decidere come trattare i missing values anche nell'instanziamento (fillNa nel dataframe?)
@@ -71,18 +71,18 @@ class JournalArticle(Publication):
 
 
 class BookChapter(Publication):
-    def __init__(self, id, publicationYear, title, author, publicationVenue, chapterNumber, citedPublications):
+    def __init__(self, identifier, publicationYear, title, author, publicationVenue, chapterNumber, citedPublications):
         self.chapterNumber = chapterNumber
         
-        super().__init__(id, publicationYear, title, author, publicationVenue, citedPublications)
+        super().__init__(identifier, publicationYear, title, author, publicationVenue, citedPublications)
     
 
     def getChapterNumber(self):
         return self.chapterNumber
 
 class ProceedingsPaper(Publication):
-    def __init__(self, id, publicationYear, title, author, publicationVenue, citedPublications):
-        super().__init__(id, publicationYear, title, author, publicationVenue, citedPublications)
+    def __init__(self, identifier, publicationYear, title, author, publicationVenue, citedPublications):
+        super().__init__(identifier, publicationYear, title, author, publicationVenue, citedPublications)
 
 
 class Venue(IdentifiableEntity):

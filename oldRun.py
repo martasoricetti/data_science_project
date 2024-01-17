@@ -41,13 +41,13 @@ grp_qp.setEndpointUrl(grp_endpoint)
 
 generic = GenericQueryProcessor()
 generic.addQueryProcessor(rel_qp)
-generic.addQueryProcessor(grp_qp)
+#generic.addQueryProcessor(grp_qp)
 
 #result_q1 = grp_qp.getJournalArticlesInJournal('issn:0219-1377')
-#result_q1 = grp_qp.getJournalArticlesInJournal('issn:2078-2489')
+result_q1 = generic.getJournalArticlesInVolume(9,'issn:2077-1312')
 #pprint(result_q1)
 
 #a= grp_qp.getOrganization(crossref_id="crossref:2780").getName()
-a= rel_qp.getPublicationsPublishedInYear('2016')
+#a= rel_qp.getPublicationsPublishedInYear('2017')
 
 
