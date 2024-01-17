@@ -164,7 +164,7 @@ class GenericQueryProcessor(object):
         finalresultlist = []
 
         for processor in self.queryProcessor:
-            q = processor.getJournalArticlesInJournal(self, inputVenueId)
+            q = processor.getJournalArticlesInJournal( inputVenueId)
 
             for row_idx, row in q.iterrows():
                     
@@ -209,7 +209,7 @@ class GenericQueryProcessor(object):
 
            
             for row_idx, row in q.iterrows():
-                aut_obj = processor.getAuthor(row['orcid'])
+                aut_obj = processor.getAuthor(row['PersonId'])
                 finalresultlist.append(aut_obj)
 
             # return result

@@ -18,8 +18,8 @@ from impl_graph import *
 rel_path = "relational.db"
 rel_dp = RelationalDataProcessor()
 rel_dp.setDbPath(rel_path)
-rel_dp.uploadData("data/relational_publications.csv")
-rel_dp.uploadData("data/relational_other_data.json")
+#rel_dp.uploadData("data/relational_publications.csv")
+#rel_dp.uploadData("data/relational_other_data.json")
 
 # Then, create the RDF triplestore (remember first to run the
 # Blazegraph instance) using the related source data
@@ -44,8 +44,8 @@ generic.addQueryProcessor(rel_qp)
 #generic.addQueryProcessor(grp_qp)
 
 #result_q1 = grp_qp.getJournalArticlesInJournal('issn:0219-1377')
-result_q1 = generic.getJournalArticlesInVolume(9,'issn:2077-1312')
-#pprint(result_q1)
+result_q1 = generic.getDistinctPublisherOfPublications(['doi:10.1007/s11192-019-03217-6','doi:10.3390/admsci10030069'])
+print(result_q1)
 
 #a= grp_qp.getOrganization(crossref_id="crossref:2780").getName()
 #a= rel_qp.getPublicationsPublishedInYear('2017')
