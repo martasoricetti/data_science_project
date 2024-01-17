@@ -308,9 +308,10 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
             LIMIT 1
             
             """
-        df_sparql=get(self.endpointUrl, query, True)
+        df_sparql_1=get(self.endpointUrl, query, True)
         #access most cited pub:
-        most_cited=df_sparql['publication'][0]
+        most_cited=df_sparql_1['publication'][0]
+        number_citing=df_sparql_1['citing_publications'][0]
         #retrieve pub data:
         query2=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                 PREFIX schema: <https://schema.org/>
@@ -345,6 +346,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         df_sparql3=get(self.endpointUrl, stringa_au_cit, True)
         df_sparql=pd.merge(df_sparql2,df_sparql3, on='id')
         df_sparql = df_sparql.fillna('')
+        df_sparql['citing_publications']=number_citing
 
         return df_sparql
     
@@ -365,7 +367,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
             """
         df_sparql=get(self.endpointUrl,query, True)
         most_cited=df_sparql['publicationVenue'][0]
-        cited=df_sparql.iloc[0]['citing_publications']
+        number_citing=df_sparql['citing_publications'][0]
 
         query2=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                 PREFIX schema: <https://schema.org/>
@@ -383,7 +385,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         df_sparql2=get(self.endpointUrl, stringa, True)
         #df_sparql_merge=pd.merge(df_sparql,df_sparql2, on='VenueId')
         df_sparql2 = df_sparql2.fillna('')
-        df_sparql2['cited']=cited
+        df_sparql2['citing_publications']=number_citing
         return df_sparql2
     
     def getVenuesByPublisherId(self, id: str):

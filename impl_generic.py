@@ -53,7 +53,7 @@ class GenericQueryProcessor(object):
         result = result.fillna("")
         result.drop_duplicates(subset="id", keep="first", inplace=True)
 
-        result_sorted = result.sort_values(by=["cited"], ascending=False)
+        result_sorted = result.sort_values(by=["citing_publications"], ascending=False)
 
         first_row = result_sorted.iloc[0]
         pub_object = processor.getPublication(first_row['id'])
@@ -63,7 +63,7 @@ class GenericQueryProcessor(object):
     def getMostCitedVenue(self):
         
         result = DataFrame()
-        unified_dict = dict()
+        
        
 
         for processor in self.queryProcessor:
@@ -74,7 +74,7 @@ class GenericQueryProcessor(object):
         result = result.fillna("")
         result.drop_duplicates(subset="VenueId", keep="first", inplace=True)
 
-        result_sorted = result.sort_values(by=["cited"], ascending=False)
+        result_sorted = result.sort_values(by=["citing_publications"], ascending=False)
 
         first_row = result_sorted.iloc[0]
 
