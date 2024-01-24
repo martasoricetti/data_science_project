@@ -389,6 +389,8 @@ class RelationalQueryProcessor(RelationalProcessor):
         return df_sql
 
     def getPublicationInVenue(self, venueId: str):
+        venueids = venueId.split(" ")
+        venueId = venueids[0]
         with connect(self.dbPath) as con:
             query1 = f'SELECT * FROM JournalArticle WHERE publicationVenue LIKE "%{venueId}%"'
             query2 = f'SELECT * FROM BookChapter WHERE publicationVenue LIKE "%{venueId}%"'
@@ -403,13 +405,19 @@ class RelationalQueryProcessor(RelationalProcessor):
         return df_sql
 
     def getJournalArticlesInIssue(self, issue: str, volume: str, journalId: str):
+        journalids = journalId.split(" ")
+        journalId = journalids[0]
         with connect(self.dbPath) as con:
-            query1 = f'SELECT * FROM JournalArticle WHERE issue ="{issue}" AND volume = "{volume}" AND publicationVenue LIKE "%{journalId}%"'
+            journalids = journalId.split(" ")
+            jID = journalids[0]
+            query1 = f'SELECT * FROM JournalArticle WHERE issue ="{issue}" AND volume = "{volume}" AND publicationVenue LIKE "%{jID}%"'
             df_sql1 = pd.read_sql(query1, con)
         con.close()
         return df_sql1
 
     def getJournalArticlesInVolume(self, volume: str, journalId: str):
+        journalids = journalId.split(" ")
+        journalId = journalids[0]
         with connect(self.dbPath) as con:
             query1 = f'SELECT * FROM JournalArticle WHERE volume = "{volume}" AND publicationVenue LIKE "%{journalId}%"'
             df_sql1 = pd.read_sql(query1, con)
@@ -417,6 +425,8 @@ class RelationalQueryProcessor(RelationalProcessor):
         return df_sql1
 
     def getJournalArticlesInJournal(self, journalId: str):
+        journalids = journalId.split(" ")
+        journalId = journalids[0]
         with connect(self.dbPath) as con:
             query1 = f'SELECT * FROM JournalArticle WHERE publicationVenue LIKE "%{journalId}%"'
             df_sql1 = pd.read_sql(query1, con)
