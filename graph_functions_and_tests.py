@@ -238,7 +238,7 @@ def upload_json_venuedf(jsonpath):
     id_venues_dict = {}
 
     for doi in my_dict["venues_id"]:
-      venue_ids = " ".join(my_dict["venues_id"][doi]) #double underscore for joining venues ids in a string
+      venue_ids = " ".join(my_dict["venues_id"][doi]) #white space for joining venues ids in a string
     
       if venue_ids not in id_venues_dict:
         id_venues_dict[venue_ids] = {"DOIs": [doi], "InternalID": "venue-"+ str(len(id_venues_dict) + 1)}

@@ -596,8 +596,12 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                     prefix dcterms: <http://purl.org/dc/terms/> 
                     prefix fabio: <http://purl.org/spar/fabio/> 
                     SELECT ?VenueId ?title ?publisher ?event
-                    WHERE {?venue schema:description ?event.
-                    FILTER CONTAINS(?VenueId,""","'",str(eventPartialName),"'",""")} 
+                    WHERE { ?venue schema:identifier ?VenueId;
+                            dcterms:title ?title;
+                              schema:publisher ?publish.
+                           ?publish schema:identifier ?publisher.
+                   ?venue schema:description ?event.
+                    FILTER CONTAINS(?event,""","'",str(eventPartialName),"'",""")} 
                     """]
 
             stringa = ("".join(query))

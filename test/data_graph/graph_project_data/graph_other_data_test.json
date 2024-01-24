@@ -1,0 +1,416 @@
+{
+    "authors": {
+        "doi:10.1016/j.websem.2021.100655": [
+            {
+                "family": "Espinoza-Arias",
+                "given": "Paola",
+                "orcid": "0000-0002-3938-2064"
+            },
+            {
+                "family": "Garijo",
+                "given": "Daniel",
+                "orcid": "0000-0003-0454-7145"
+            },
+            {
+                "family": "Corcho",
+                "given": "Oscar",
+                "orcid": "0000-0002-9260-0753"
+            }
+        ],
+        "doi:10.1007/s10115-017-1100-y": [
+            {
+                "family": "Diefenbach",
+                "given": "Dennis",
+                "orcid": "0000-0002-0046-2219"
+            }
+        ],
+        "doi:10.1016/j.websem.2014.03.003": [
+            {
+                "family": "Groth",
+                "given": "Paul",
+                "orcid": "0000-0003-0183-6910"
+            },
+            {
+                "family": "Gray",
+                "given": "Alasdair J.G.",
+                "orcid": "0000-0002-5711-4872"
+            },
+            {
+                "family": "Harland",
+                "given": "Lee",
+                "orcid": "0000-0003-0461-0028"
+            }
+        ],
+        "doi:10.1093/nar/gkz997": [
+            {
+                "family": "Shefchek",
+                "given": "Kent A",
+                "orcid": "0000-0001-6439-2224"
+            },
+            {
+                "family": "Vasilevsky",
+                "given": "Nicole",
+                "orcid": "0000-0001-5208-3432"
+            },
+            {
+                "family": "Balhoff",
+                "given": "James P",
+                "orcid": "0000-0002-8688-6599"
+            },
+            {
+                "family": "Jupp",
+                "given": "Simon",
+                "orcid": "0000-0002-0643-3144"
+            },
+            {
+                "family": "Köhler",
+                "given": "Sebastian",
+                "orcid": "0000-0002-5316-1399"
+            },
+            {
+                "family": "Robinson",
+                "given": "Peter N",
+                "orcid": "0000-0002-0736-9199"
+            },
+            {
+                "family": "Munoz-Torres",
+                "given": "Monica C",
+                "orcid": "0000-0001-8430-6039"
+            }
+        ],
+        "doi:10.3390/publications7030050": [
+            {
+                "family": "Jansen",
+                "given": "Gregory",
+                "orcid": "0000-0001-6591-6595"
+            }
+        ],
+        "doi:10.1017/s0269888920000065": [
+            {
+                "family": "Kotis",
+                "given": "Konstantinos I.",
+                "orcid": "0000-0001-7838-9691"
+            }
+        ],
+        "doi:10.3390/info11030129": [
+            {
+                "family": "Espinoza-Arias",
+                "given": "Paola",
+                "orcid": "0000-0002-3938-2064"
+            },
+            {
+                "family": "Corcho",
+                "given": "Oscar",
+                "orcid": "0000-0002-9260-0753"
+            }
+        ],
+        "doi:10.1007/s00778-018-0528-3": [
+            {
+                "family": "Kondylakis",
+                "given": "Haridimos",
+                "orcid": "0000-0002-9917-4486"
+            }
+        ],
+        "doi:10.21105/joss.02731": [
+            {
+                "family": "Meroño-Peñuela",
+                "given": "Albert",
+                "orcid": "0000-0003-4646-5842"
+            },
+            {
+                "family": "Martinez-Ortiz",
+                "given": "Carlos",
+                "orcid": "0000-0001-5565-7577"
+            }
+        ],
+        "doi:10.1016/j.websem.2014.06.002": [
+            {
+                "family": "Marx",
+                "given": "Edgard",
+                "orcid": "0000-0002-3111-9405"
+            }
+        ],
+        "doi:10.1007/s10115-019-01401-x": [
+            {
+                "family": "Wang",
+                "given": "Meng",
+                "orcid": "0000-0002-2293-1709"
+            }
+        ],
+        "doi:10.1007/978-3-030-30793-6_22": [
+            {
+                "family": "Li",
+                "given": "Yuan-Fang",
+                "orcid": "0000-0003-4651-2821"
+            }
+        ],
+        "doi:10.1007/978-3-030-33220-4_25": [
+            {
+                "family": "Gusmita",
+                "given": "Ria Hari",
+                "orcid": "0000-0003-4808-850X"
+            },
+            {
+                "family": "Jalota",
+                "given": "Rricha",
+                "orcid": "0000-0003-1517-6394"
+            },
+            {
+                "family": "Ngonga Ngomo",
+                "given": "Axel-Cyrille",
+                "orcid": "0000-0001-7112-3516"
+            },
+            {
+                "family": "Usbeck",
+                "given": "Ricardo",
+                "orcid": "0000-0002-0191-7211"
+            }
+        ],
+        "doi:10.1080/17538947.2020.1738568": [
+            {
+                "family": "Scheider",
+                "given": "Simon",
+                "orcid": "0000-0002-2267-4810"
+            }
+        ],
+        "doi:10.1007/s10462-020-09826-5": [
+            {
+                "family": "Da Silva",
+                "given": "José Wellington Franco",
+                "orcid": "0000-0001-9093-0428"
+            },
+            {
+                "family": "Venceslau",
+                "given": "Amanda Drielly Pires",
+                "orcid": "0000-0003-4118-4224"
+            },
+            {
+                "family": "Sales",
+                "given": "Juliano Efson",
+                "orcid": "0000-0003-2717-6949"
+            },
+            {
+                "family": "Maia",
+                "given": "José Gilvan Rodrigues",
+                "orcid": "0000-0002-2607-2729"
+            },
+            {
+                "family": "Pinheiro",
+                "given": "Vládia Célia Monteiro",
+                "orcid": "0000-0002-9851-8304"
+            }
+        ],
+        "doi:10.1007/978-3-030-49461-2_25": [
+            {
+                "family": "Diefenbach",
+                "given": "Dennis",
+                "orcid": "0000-0002-0046-2219"
+            }
+        ],
+        "doi:10.1007/s10462-020-09866-x": [
+            {
+                "family": "Deriu",
+                "given": "Jan",
+                "orcid": "0000-0002-8405-1344"
+            }
+        ],
+        "doi:10.1007/s10796-020-10035-2": [
+            {
+                "family": "Kafle",
+                "given": "Sabin",
+                "orcid": "0000-0003-2141-4360"
+            }
+        ],
+        "doi:10.1007/978-3-030-60276-5_25": [
+            {
+                "family": "Kuleshov",
+                "given": "Sergey",
+                "orcid": "0000-0002-8454-5598"
+            },
+            {
+                "family": "Zaytseva",
+                "given": "Alexandra",
+                "orcid": "0000-0002-1345-8550"
+            },
+            {
+                "family": "Nenausnikov",
+                "given": "Konstantin",
+                "orcid": "0000-0002-4628-2096"
+            }
+        ]
+    },
+    "venues_id": {
+        "doi:10.1016/j.websem.2021.100655": [
+            "issn:1570-8268"
+        ],
+        "doi:10.1007/s10115-017-1100-y": [
+            "issn:0219-1377",
+            "issn:0219-3116"
+        ],
+        "doi:10.1016/j.websem.2014.03.003": [
+            "issn:1570-8268"
+        ],
+        "doi:10.1093/nar/gkz997": [
+            "issn:0305-1048",
+            "issn:1362-4962"
+        ],
+        "doi:10.3390/publications7030050": [
+            "issn:2304-6775"
+        ],
+        "doi:10.1017/s0269888920000065": [
+            "issn:0269-8889",
+            "issn:1469-8005"
+        ],
+        "doi:10.3390/info11030129": [
+            "issn:2078-2489"
+        ],
+        "doi:10.1007/s00778-018-0528-3": [
+            "issn:1066-8888",
+            "issn:0949-877X"
+        ],
+        "doi:10.21105/joss.02731": [
+            "issn:2475-9066"
+        ],
+        "doi:10.1016/j.websem.2014.06.002": [
+            "issn:1570-8268"
+        ],
+        "doi:10.1007/s10115-019-01401-x": [
+            "issn:0219-1377",
+            "issn:0219-3116"
+        ],
+        "doi:10.1007/978-3-030-30793-6_22": [
+            "isbn:9783030307929",
+            "isbn:9783030307936"
+        ],
+        "doi:10.1007/978-3-030-33220-4_25": [
+            "isbn:9783030332198",
+            "isbn:9783030332204"
+        ],
+        "doi:10.1080/17538947.2020.1738568": [
+            "issn:1753-8947",
+            "issn:1753-8955"
+        ],
+        "doi:10.1007/s10462-020-09826-5": [
+            "issn:0269-2821",
+            "issn:1573-7462"
+        ],
+        "doi:10.1007/978-3-030-49461-2_25": [
+            "isbn:9783030494605",
+            "isbn:9783030494612"
+        ],
+        "doi:10.1007/s10462-020-09866-x": [
+            "issn:0269-2821",
+            "issn:1573-7462"
+        ],
+        "doi:10.1007/s10796-020-10035-2": [
+            "issn:1387-3326",
+            "issn:1572-9419"
+        ],
+        "doi:10.1007/978-3-030-60276-5_25": [
+            "isbn:9783030602758",
+            "isbn:9783030602765"
+        ]
+
+    },
+    "references": {
+        "doi:10.1016/j.websem.2021.100655": [
+            "doi:10.1007/s10115-017-1100-y",
+            "doi:10.1016/j.websem.2014.03.003",
+            "doi:10.1093/nar/gkz997",
+            "doi:10.3390/publications7030050",
+            "doi:10.1017/s0269888920000065",
+            "doi:10.3390/info11030129",
+            "doi:10.1007/s00778-018-0528-3"
+        ],
+        "doi:10.1007/s10115-017-1100-y": [
+            "doi:10.1016/j.websem.2014.06.002"
+        ],
+        "doi:10.1016/j.websem.2014.03.003": [],
+        "doi:10.1093/nar/gkz997": [
+            "doi:10.1002/humu.23641",
+            "doi:10.1002/humu.23655",
+            "doi:10.1007/s10592-018-1072-9",
+            "doi:10.1038/nprot.2015.124",
+            "doi:10.1038/s41588-018-0096-x",
+            "doi:10.1038/s41746-019-0110-4",
+            "doi:10.1093/nar/gkx1132",
+            "doi:10.1093/nar/gkx998",
+            "doi:10.1093/nar/gky1003",
+            "doi:10.1093/nar/gky1056",
+            "doi:10.1093/nar/gky1079",
+            "doi:10.1093/nar/gky1105",
+            "doi:10.1093/nar/gky1120",
+            "doi:10.1093/nar/gky1131",
+            "doi:10.1186/s13326-017-0126-0",
+            "doi:10.1371/journal.pone.0213090"
+        ],
+        "doi:10.3390/publications7030050": [],
+        "doi:10.1017/s0269888920000065": [],
+        "doi:10.3390/info11030129": [],
+        "doi:10.1007/s00778-018-0528-3": [],
+        "doi:10.21105/joss.02731": [
+            "doi:10.1007/978-3-030-30796-7_28",
+            "doi:10.1016/j.websem.2021.100655"
+        ],
+        "doi:10.1016/j.websem.2014.06.002": [],
+        "doi:10.1007/s10115-019-01401-x": [
+            "doi:10.1007/s10115-017-1100-y"
+        ],
+        "doi:10.1007/978-3-030-30793-6_22": [
+            "doi:10.1007/s10115-017-1100-y"
+        ],
+        "doi:10.1007/978-3-030-33220-4_25": [
+            "doi:10.1007/s10115-017-1100-y"
+        ],
+        "doi:10.1080/17538947.2020.1738568": [
+            "doi:10.1007/s10115-017-1100-y"
+        ],
+        "doi:10.1007/s10462-020-09826-5": [
+            "doi:10.1007/s10115-017-1100-y"
+        ],
+        "doi:10.1007/978-3-030-49461-2_25": [
+            "doi:10.1007/978-3-319-93417-4_10",
+            "doi:10.1007/s10115-017-1100-y"
+        ],
+        "doi:10.1007/s10462-020-09866-x": [
+            "doi:10.1007/s10115-017-1100-y"
+        ],
+        "doi:10.1007/s10796-020-10035-2": [
+            "doi:10.1007/s10115-017-1100-y"
+        ],
+        "doi:10.1007/978-3-030-60276-5_25": [
+            "doi:10.1007/s10115-017-1100-y"
+        ]
+
+    },
+    "publishers": {
+        "crossref:78": {
+            "id": "crossref:78",
+            "name": "Elsevier BV"
+        },
+        "crossref:297": {
+            "id": "crossref:297",
+            "name": "Springer Science and Business Media LLC"
+        },
+        "crossref:286": {
+            "id": "crossref:286",
+            "name": "Oxford University Press (OUP)"
+        },
+        "crossref:1968": {
+            "id": "crossref:1968",
+            "name": "MDPI AG"
+        },
+        "crossref:56": {
+            "id": "crossref:56",
+            "name": "Cambridge University Press (CUP)"
+        },
+        "crossref:8722": {
+            "id": "crossref:8722",
+            "name": "The Open Journal"
+        },
+        "crossref:301": {
+            "id": "crossref:301",
+            "name": "Informa UK Limited"
+        }
+    }
+}
