@@ -1,3 +1,4 @@
+import pandas as pd
 from pandas import concat
 from pandas import DataFrame
 from classes import *
@@ -43,7 +44,7 @@ class GenericQueryProcessor(object):
 
     def getMostCitedPublication(self):
         
-        result=DataFrame
+        result = pd.DataFrame()
 
         for processor in self.queryProcessor:
             q = processor.getMostCitedPublication()
@@ -56,15 +57,19 @@ class GenericQueryProcessor(object):
         result_sorted = result.sort_values(by=["citing_publications"], ascending=False)
 
         first_row = result_sorted.iloc[0]
-        pub_object = processor.getPublication(first_row['id'])
+        max_value = first_row["citing_publications"]
+        most_cited_pub = result_sorted[result_sorted["citing_publications"] == max_value]
 
-        return pub_object
+        most_cited_pub_list = []
+        for row_idx, row in most_cited_pub.iterrows():
+            pub_object = processor.getPublication(row['id'])
+            most_cited_pub_list.append(pub_object)
+
+        return most_cited_pub_list
 
     def getMostCitedVenue(self):
         
         result = DataFrame()
-        
-       
 
         for processor in self.queryProcessor:
             q = processor.getMostCitedVenue()

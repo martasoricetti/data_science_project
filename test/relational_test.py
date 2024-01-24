@@ -129,8 +129,7 @@ class TestRelational(unittest.TestCase):
         rel_qp = self.instantiateRelQP()
         df = rel_qp.getVenuesByPublisherId('crossref:297')
         venues_id = list(df['VenueId'])
-        expected_venues_id = ["isbn:9783030612436", "isbn:9783030612443", "issn:2052-4463"]
-
+        expected_venues_id = ["isbn:9783030612436 isbn:9783030612443", "issn:2052-4463"]
         self.assertTrue(set(venues_id) == set(expected_venues_id))
 
         os.remove(self.relational_db)
@@ -138,7 +137,7 @@ class TestRelational(unittest.TestCase):
     def test_getPublicationInVenue(self):
         self.uploadData()
         rel_qp = self.instantiateRelQP()
-        df = rel_qp.getPublicationInVenue("isbn:9783030612443")
+        df = rel_qp.getPublicationInVenue("isbn:9783030612443 isbn:9783030612436")
         dois = list(df['id'])
         expected_dois = ["doi:10.1007/978-3-030-61244-3_6"]
         self.assertEqual(dois, expected_dois)
@@ -167,6 +166,17 @@ class TestRelational(unittest.TestCase):
 
         os.remove(self.relational_db)
 
+    def test_getJournalArticlesInIssue_three(self):
+        # in the column publicationVenue there are two values and both are passed as input parameter
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        df = rel_qp.getJournalArticlesInIssue(issue="22", volume="32", journalId="issn:1466-4399 issn:0958-5192")
+        dois = list(df['id'])
+        expected_dois = ["doi:10.1080/09585192.2019.1661267"]
+        self.assertEqual(dois, expected_dois)
+
+        os.remove(self.relational_db)
+
 
     def test_getJournalArticlesInVolume(self):
         self.uploadData()
@@ -178,6 +188,15 @@ class TestRelational(unittest.TestCase):
 
         os.remove(self.relational_db)
 
+    def test_getJournalArticlesInVolume_two(self):
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        df = rel_qp.getJournalArticlesInVolume(volume="32", journalId="issn:0958-5192 issn:1466-4399")
+        dois = list(df['id'])
+        expected_dois = ["doi:10.1080/09585192.2019.1661267"]
+        self.assertTrue(set(dois)==set(expected_dois))
+
+        os.remove(self.relational_db)
 
     def test_getJournalArticlesInJournal(self):
         self.uploadData()
@@ -238,17 +257,31 @@ class TestRelational(unittest.TestCase):
         self.uploadData()
         rel_qp = self.instantiateRelQP()
         organization_obj = rel_qp.getOrganization('crossref:297')
-
-        print(organization_obj)
+        name = organization_obj.getName()
+        exp_name = "Springer Science and Business Media LLC"
+        self.assertEqual(name, exp_name)
+        os.remove(self.relational_db)
 
     def test_getPublication(self):
         self.uploadData()
         rel_qp = self.instantiateRelQP()
         x = rel_qp.getPublication('doi:10.1162/qss_a_00023')
+        ids = []
         for el in x.getAuthors():
-            print(el.getIds())
+            ids.append(el.getIds())
+        expected_ids = ["0000-0003-0530-4305", "0000-0001-5506-523X"]
+        self.assertEqual(ids, expected_ids)
+
+        os.remove(self.relational_db)
 
 
+    def test_getVenue(self):
+        self.uploadData()
+        rel_qp = self.instantiateRelQP()
+        x = rel_qp.getVenue("issn:0958-5192 issn:1466-4399")
+        name = x.getTitle()
+        exp_name = "The International Journal Of Human Resource Management"
 
+        self.assertEqual(name, exp_name)
 
-
+        os.remove(self.relational_db)
