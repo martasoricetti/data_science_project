@@ -141,37 +141,38 @@ class RelationalDataProcessor(RelationalProcessor):
                         pass
                 df_doi_venuesId = pd.DataFrame(venues, columns=["doi", "publicationVenue"])
 
+
                 # Journal
                 # join df_venues_doi and journals dataframes
                 with connect(self.dbPath) as con:
                     df_journal = pd.read_sql('SELECT * FROM Journal', con)
-                df_joined_journals = pd.merge(df_journal, df_venues_doi, how="left", left_on="id", right_on="doi")
+                df_joined_journals = pd.merge(df_journal, df_doi_venuesId, how="left", left_on="id", right_on="doi")
                 df_joined_journals_filtered = df_joined_journals[
-                    ["issn", "publication_venue", "publisher"]].drop_duplicates(ignore_index=True)
+                    ["publicationVenue", "publication_venue", "publisher"]].drop_duplicates(ignore_index=True)
                 df_journal = df_joined_journals_filtered.rename(
-                    columns={'issn': 'VenueId', 'publication_venue': 'title'})
+                    columns={'publicationVenue': 'VenueId', 'publication_venue': 'title'})
                 df_journal = df_journal.fillna('')
 
                 # Book
                 # join df_venues_doi and book dataframes
                 with connect(self.dbPath) as con:
                     df_book = pd.read_sql('SELECT * FROM Book', con)
-                df_joined_book = pd.merge(df_book, df_venues_doi, how="left", left_on="id", right_on="doi")
-                df_joined_book_filtered = df_joined_book[["issn", "publication_venue", "publisher"]].drop_duplicates(
+                df_joined_book = pd.merge(df_book, df_doi_venuesId, how="left", left_on="id", right_on="doi")
+                df_joined_book_filtered = df_joined_book[["publicationVenue", "publication_venue", "publisher"]].drop_duplicates(
                     ignore_index=True)
-                df_book = df_joined_book_filtered.rename(columns={'publication_venue': 'title', 'issn': 'VenueId'})
+                df_book = df_joined_book_filtered.rename(columns={'publication_venue': 'title', 'publicationVenue': 'VenueId'})
                 df_book = df_book.fillna('')
 
                 # Proceedings
                 # join df_venues_doi and proceedings dataframes
                 with connect(self.dbPath) as con:
                     df_proceedings = pd.read_sql('SELECT * FROM Proceedings', con)
-                df_joined_proceedings = pd.merge(df_proceedings, df_venues_doi, how="left", left_on="id",
+                df_joined_proceedings = pd.merge(df_proceedings, df_doi_venuesId, how="left", left_on="id",
                                                  right_on="doi")
                 df_joined_proceedings_filtered = df_joined_proceedings[
-                    ["issn", "publication_venue", "publisher", "event"]].drop_duplicates(ignore_index=True)
+                    ["publicationVenue", "publication_venue", "publisher", "event"]].drop_duplicates(ignore_index=True)
                 df_proceedings = df_joined_proceedings_filtered.rename(
-                    columns={'issn': 'VenueId', 'publication_venue': 'title'})
+                    columns={'publicationVenue': 'VenueId', 'publication_venue': 'title'})
                 df_proceedings = df_proceedings.fillna('')
 
                 # JournalArticle
@@ -320,6 +321,7 @@ class RelationalQueryProcessor(RelationalProcessor):
             df_sql = pd.concat([df_journal_art, df_book_chapter, df_proceedings_paper], ignore_index=True)
             df_sql = df_sql.fillna('')
             df_sql['chapter'] = df_sql['chapter'].astype(str).str.replace('.0', '', regex=False)
+            df_sql.loc[:, "citing_publications"] = list(df_sql1['citation_count'])
         con.close()
         return df_sql
 
@@ -356,22 +358,19 @@ class RelationalQueryProcessor(RelationalProcessor):
             for key in venues_count:
                 if venues_count[key] == max_value:
                     most_cited_venues.append(key)
-            single_venues=[]
-            for more_x in most_cited_venues:
-                splitted = more_x.split(" ")
-                for x in splitted:
-                    single_venues.append(x)
+
             query5 = 'SELECT * FROM Journal WHERE VenueId IN ({});'
-            query5 = query5.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
+            query5 = query5.format(','.join(["'{}'".format(venue_id) for venue_id in most_cited_venues]))
             query6 = 'SELECT * FROM Book WHERE VenueId IN ({});'
-            query6 = query6.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
+            query6 = query6.format(','.join(["'{}'".format(venue_id) for venue_id in most_cited_venues]))
             query7 = 'SELECT * FROM Proceedings WHERE VenueId IN ({});'
-            query7 = query7.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
+            query7 = query7.format(','.join(["'{}'".format(venue_id) for venue_id in most_cited_venues]))
             df_journal = pd.read_sql(query5, con)
             df_book = pd.read_sql(query6, con)
             df_proceedings = pd.read_sql(query7, con)
             df_sql = pd.concat([df_journal, df_book, df_proceedings], ignore_index=True)
             df_sql = df_sql.fillna('')
+            df_sql.loc[:, "citing_publications"] = max_value
         con.close()
         return df_sql
 
@@ -388,7 +387,6 @@ class RelationalQueryProcessor(RelationalProcessor):
             df_sql = df_sql.fillna('')
         con.close()
         return df_sql
-
 
     def getPublicationInVenue(self, venueId: str):
         with connect(self.dbPath) as con:
@@ -539,17 +537,12 @@ class RelationalQueryProcessor(RelationalProcessor):
             new_df = pd.concat([df_sql1, df_sql2, df_sql3], ignore_index=True)
             venues_set = set(new_df['publicationVenue'])
             venues_list = list(venues_set)
-            single_venues = []
-            for more_x in venues_list:
-                splitted = more_x.split(" ")
-                for x in splitted:
-                    single_venues.append(x)
             query4 = 'SELECT publisher FROM Journal WHERE VenueId IN ({});'
-            query4 = query4.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
+            query4 = query4.format(','.join(["'{}'".format(venue_id) for venue_id in venues_list]))
             query5 = 'SELECT publisher FROM Book WHERE VenueId IN ({});'
-            query5 = query5.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
+            query5 = query5.format(','.join(["'{}'".format(venue_id) for venue_id in venues_list]))
             query6 = 'SELECT publisher FROM Proceedings WHERE VenueId IN ({});'
-            query6 = query6.format(','.join(["'{}'".format(venue_id) for venue_id in single_venues]))
+            query6 = query6.format(','.join(["'{}'".format(venue_id) for venue_id in venues_list]))
             df_sql4 = pd.read_sql(query4, con)
             df_sql5 = pd.read_sql(query5, con)
             df_sql6 = pd.read_sql(query6, con)

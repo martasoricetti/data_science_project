@@ -129,8 +129,7 @@ class TestRelational(unittest.TestCase):
         rel_qp = self.instantiateRelQP()
         df = rel_qp.getVenuesByPublisherId('crossref:297')
         venues_id = list(df['VenueId'])
-        expected_venues_id = ["isbn:9783030612436", "isbn:9783030612443", "issn:2052-4463"]
-
+        expected_venues_id = ["isbn:9783030612436 isbn:9783030612443", "issn:2052-4463"]
         self.assertTrue(set(venues_id) == set(expected_venues_id))
 
         os.remove(self.relational_db)
@@ -238,17 +237,22 @@ class TestRelational(unittest.TestCase):
         self.uploadData()
         rel_qp = self.instantiateRelQP()
         organization_obj = rel_qp.getOrganization('crossref:297')
-
-        print(organization_obj)
+        name = organization_obj.getName()
+        exp_name = "Springer Science and Business Media LLC"
+        self.assertEqual(name, exp_name)
+        os.remove(self.relational_db)
 
     def test_getPublication(self):
         self.uploadData()
         rel_qp = self.instantiateRelQP()
         x = rel_qp.getPublication('doi:10.1162/qss_a_00023')
+        ids = []
         for el in x.getAuthors():
-            print(el.getIds())
+            ids.append(el.getIds())
+        expected_ids = ["0000-0003-0530-4305", "0000-0001-5506-523X"]
+        self.assertEqual(ids, expected_ids)
 
-
+        os.remove(self.relational_db)
 
 
 
