@@ -227,7 +227,8 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                  "WHERE { ?publication schema:datePublished " ,str(year), ".", 
                  "?publication schema:identifier ?id.",
                  "?publication dcterms:title ?title.",                
-                 "OPTIONAL{?publication schema:isPartOf ?publicationVenue.}",
+                 """OPTIONAL{?publication schema:isPartOf ?publicationVenueUri.
+                            ?publicationVenueUri schema:identifier ?publicationVenue.}""",
                  
                  "}"]
         query_authors_and_cited=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -237,8 +238,10 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                                     prefix fabio: <http://purl.org/spar/fabio/> 
                                     SELECT ?publication (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
                                     WHERE { ?publication schema:datePublished """ ,str(year), ".", 
-                                        """?publication schema:author ?author_single .
-                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                        """?publication schema:author ?personaUri.
+                                        ?personaUri schema:identifier ?author_single .
+                                            OPTIONAL{?publication cito:cites ?cited_pub_uri. 
+                                            ?cited_pub_uri schema:identifier ?cited_pub.}
                                             OPTIONAL{?publication schema:isPartOf ?publicationVenue.}
                                         }
                                     GROUP BY ?publication 
@@ -249,6 +252,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         #df_sparql1=df_sparql1.drop_duplicates()
         df_sparql2=get(self.endpointUrl, stringa2, True)
         df_sparql=pd.merge(df_sparql1,df_sparql2, on="publication")
+        df_sparql['publication_year'] = year
         df_sparql = df_sparql.fillna('')
         return df_sparql
     
@@ -260,12 +264,15 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                                     prefix fabio: <http://purl.org/spar/fabio/> 
             SELECT  ?publication ?id ?title ?publicationVenue ?publication_year 
             WHERE{?publication schema:author ?author.
-                  ?author schema:identifier """ ,str("'"+id+"'"), """.
-                  ?publication schema:datePublished ?publication_year.         
-                  ?publication schema:identifier ?id.
+                  ?author schema:identifier ?personId.
+                         
+                  
+                   OPTIONAL { ?publication schema:identifier ?id.
                   ?publication dcterms:title ?title.
-                   OPTIONAL {?publication schema:isPartOf ?publicationVenue.}
-               }                                                           """
+               ?publication schema:datePublished ?publication_year.  
+                   ?publication schema:isPartOf ?publicationVenueUri. 
+                     ?publicationVenueUri schema:identifier ?publicationVenue.}
+             FILTER  (?personId =""" ,str("'"+id+"'"), """)  }         """
                
 
         ]
@@ -276,10 +283,12 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                                     prefix fabio: <http://purl.org/spar/fabio/> 
                                     SELECT ?publication (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
                                     WHERE {?publication schema:author ?author.
-                                            ?author schema:identifier """ ,str("'"+id+"'"), """.
-                                            ?publication schema:author ?author_single .
-                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                            ?author schema:identifier ?personId.
+                                            ?publication schema:author ?personUri.
+                                            ?personUri schema:identifier ?author_single .
+                                            OPTIONAL{?publication cito:cites ?cited_pub_uri. ?cited_pub_uri schema:identifier ?cited_pub.}
                                             OPTIONAL{?publication schema:isPartOf ?publicationVenue.}
+                                        FILTER  (?personId = """ ,str("'"+id+"'"), """) 
                                         }
                                     GROUP BY ?publication 
                                  """
@@ -288,6 +297,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         stringa = (" ".join(query))
         stringa2=(" ".join(query_authors_and_cited))
         df_sparql1 = get(self.endpointUrl, stringa, True)
+        #print(df_sparql1)
         #df_sparql1=df_sparql1.drop_duplicates()
         df_sparql2=get(self.endpointUrl, stringa2, True)
         df_sparql=pd.merge(df_sparql1,df_sparql2, on="publication")
@@ -305,50 +315,69 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                   }
             GROUP BY ?publication
             ORDER BY DESC(?citing_publications)
-            LIMIT 1
+            
             
             """
+        #removed LIMIT 1
         df_sparql_1=get(self.endpointUrl, query, True)
         #access most cited pub:
-        most_cited=df_sparql_1['publication'][0]
+        #most_cited=df_sparql_1['publication'][0]
         number_citing=df_sparql_1['citing_publications'][0]
-        #retrieve pub data:
-        query2=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                PREFIX schema: <https://schema.org/>
-                PREFIX cito:<http://purl.org/spar/cito/>
-                prefix dcterms: <http://purl.org/dc/terms/> 
-                prefix fabio: <http://purl.org/spar/fabio/> 
-                SELECT ?id ?publicationVenue ?publication_year ?title
-                WHERE {""", '<',str(most_cited),'> ', """schema:identifier ?id;
-                                             dcterms:title ?title;
-                                              schema:datePublished ?publication_year.""",
-                    "OPTIONAL {",'<',str(most_cited),'> ', 'schema:isPartOf ?publicationVenue.}  }'
-            ]
-        stringa = ("".join(query2))
-        df_sparql2=get(self.endpointUrl, stringa, True)
 
-        query_authors_and_cited=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                                    PREFIX schema: <https://schema.org/>
-                                    PREFIX cito:<http://purl.org/spar/cito/>
-                                    prefix dcterms: <http://purl.org/dc/terms/> 
-                                    prefix fabio: <http://purl.org/spar/fabio/> 
-                                    SELECT ?id (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
-                                    WHERE {""", '<',str(most_cited),'> ',""" schema:identifier ?id;
-                                            
-                                                         schema:author ?author_single .
+        # All vaues = to max
+        selected_rows = df_sparql_1[df_sparql_1['citing_publications'] == number_citing]
 
-                                            OPTIONAL{""", '<',str(most_cited),'> ',""" cito:cites ?cited_pub.}
-                                            OPTIONAL{""", '<',str(most_cited),'> ',""" schema:isPartOf ?publicationVenue.}
-                                        }
-                                    GROUP BY ?id 
-                                 """]
-        stringa_au_cit = ("".join(query_authors_and_cited))
-        df_sparql3=get(self.endpointUrl, stringa_au_cit, True)
-        df_sparql=pd.merge(df_sparql2,df_sparql3, on='id')
-        df_sparql = df_sparql.fillna('')
-        df_sparql['citing_publications']=number_citing
+        #df for concat
+        most_cited_df=pd.DataFrame()
 
-        return df_sparql
+        for idx, row in selected_rows.iterrows():
+
+
+            #retrieve pub data:
+            query2=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                    PREFIX schema: <https://schema.org/>
+                    PREFIX cito:<http://purl.org/spar/cito/>
+                    prefix dcterms: <http://purl.org/dc/terms/> 
+                    prefix fabio: <http://purl.org/spar/fabio/> 
+                    SELECT ?id ?publicationVenue ?publication_year ?title
+                    WHERE {""", '<',str(row['publication']),'> ', """schema:identifier ?id;
+                                                dcterms:title ?title;
+                                                schema:datePublished ?publication_year.""",
+                        "OPTIONAL {",'<',str(row['publication']),'> ', '''schema:isPartOf ?publicationVenueUri.
+                                    ?publicationVenueUri schema:identifier ?publicationVenue}  }'''
+                ]
+            stringa = ("".join(query2))
+            df_sparql2=get(self.endpointUrl, stringa, True)
+            
+
+            query_authors_and_cited=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                                        PREFIX schema: <https://schema.org/>
+                                        PREFIX cito:<http://purl.org/spar/cito/>
+                                        prefix dcterms: <http://purl.org/dc/terms/> 
+                                        prefix fabio: <http://purl.org/spar/fabio/> 
+                                        SELECT ?id (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
+                                        WHERE {""", '<',str(row['publication']),'> ',""" schema:identifier ?id;
+                                                
+                                                            schema:author ?author_single_uri .
+                                                        ?author_single_uri schema:identifier ?author_single.
+                                                OPTIONAL{""", '<',str(row['publication']),'> ',""" cito:cites ?cited_pub_uri.
+                                                ?cited_pub_uri schema:identifier ?cited_pub.
+                                                }
+                                                OPTIONAL{""", '<',str(row['publication']),'> ',""" schema:isPartOf ?publicationVenue.}
+                                            }
+                                        GROUP BY ?id 
+                                    """]
+            stringa_au_cit = ("".join(query_authors_and_cited))
+            df_sparql3=get(self.endpointUrl, stringa_au_cit, True)
+            df_sparql=pd.merge(df_sparql2,df_sparql3, on='id')
+            df_sparql = df_sparql.fillna('')
+            df_sparql['citing_publications']=row['citing_publications']
+            most_cited_df= pd.concat([most_cited_df, df_sparql])
+
+        
+
+
+        return most_cited_df
     
     def getMostCitedVenue(self):
         query="""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -362,31 +391,44 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                   }
             GROUP BY ?publicationVenue
             ORDER BY DESC(?citing_publications)
-           LIMIT 1
+           
             
             """
+        #---------REMOVED LIMIT 1 IN SPARQL QUERY---------------------
+
         df_sparql=get(self.endpointUrl,query, True)
-        most_cited=df_sparql['publicationVenue'][0]
+        #most_cited=df_sparql['publicationVenue'][0]
         number_citing=df_sparql['citing_publications'][0]
 
-        query2=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                PREFIX schema: <https://schema.org/>
-                PREFIX cito:<http://purl.org/spar/cito/>
-                prefix dcterms: <http://purl.org/dc/terms/> 
-                prefix fabio: <http://purl.org/spar/fabio/> 
-                SELECT ?VenueId ?title ?publisher ?event
-                WHERE {""", '<',str(most_cited),'> ', """schema:identifier ?VenueId;
-                                             dcterms:title ?title;
-                                              schema:publisher ?publisher.
-                        OPTIONAL{""", '<',str(most_cited),'> ', """schema:description ?event.} }"""
-                     
-            ]
-        stringa = ("".join(query2))
-        df_sparql2=get(self.endpointUrl, stringa, True)
-        #df_sparql_merge=pd.merge(df_sparql,df_sparql2, on='VenueId')
-        df_sparql2 = df_sparql2.fillna('')
-        df_sparql2['citing_publications']=number_citing
-        return df_sparql2
+         # All vaues = to max
+        selected_rows = df_sparql[df_sparql['citing_publications'] == number_citing]
+
+        #df for concat
+        most_cited_df=pd.DataFrame()
+
+        for idx, row in selected_rows.iterrows():
+
+
+            query2=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                    PREFIX schema: <https://schema.org/>
+                    PREFIX cito:<http://purl.org/spar/cito/>
+                    prefix dcterms: <http://purl.org/dc/terms/> 
+                    prefix fabio: <http://purl.org/spar/fabio/> 
+                    SELECT ?VenueId ?title ?publisher ?event
+                    WHERE {""", '<',str(row['publicationVenue']),'> ', """schema:identifier ?VenueId;
+                                                dcterms:title ?title;
+                                                schema:publisher ?publisherUri.
+                                                ?publisherUri schema:identifier ?publisher.
+                            OPTIONAL{""", '<',str(row['publicationVenue']),'> ', """schema:description ?event.} }"""
+                        
+                    ]
+            stringa = ("".join(query2))
+            df_sparql2=get(self.endpointUrl, stringa, True)
+            #df_sparql_merge=pd.merge(df_sparql,df_sparql2, on='VenueId')
+            df_sparql2 = df_sparql2.fillna('')
+            df_sparql2['citing_publications']=row['citing_publications']
+            most_cited_df= pd.concat([most_cited_df, df_sparql2])
+        return most_cited_df
     
     def getVenuesByPublisherId(self, id: str):
         query=["""PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -394,7 +436,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                 PREFIX cito:<http://purl.org/spar/cito/>
                 prefix dcterms: <http://purl.org/dc/terms/> 
                 prefix fabio: <http://purl.org/spar/fabio/> 
-                SELECT ?VenueId ?title ?publisher
+                SELECT ?VenueId ?title ?publisher 
                WHERE {?venue schema:publisher ?publisher.
                ?publisher schema:identifier """, "'",str(id),"'", """.
                ?venue dcterms:title ?title.
@@ -405,6 +447,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         stringa = ("".join(query))
         df_sparql=get(self.endpointUrl, stringa, True)
         df_sparql = df_sparql.fillna('')
+        df_sparql['publisher']=str(id)
         return df_sparql
     
 
@@ -416,12 +459,12 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                 prefix dcterms: <http://purl.org/dc/terms/> 
                 prefix fabio: <http://purl.org/spar/fabio/> 
                 SELECT ?publication ?id ?title ?publicationVenue ?publication_year
-               WHERE {?publication schema:isPartOf ?publicationVenue;
+               WHERE {?publication schema:isPartOf ?publicationVenueUri;
                           schema:datePublished ?publication_year.
-                      ?publicationVenue schema:identifier ?VenueId.
+                      ?publicationVenueUri schema:identifier ?publicationVenue.
                       ?publication dcterms:title ?title;
                                    schema:identifier ?id.
-               FILTER CONTAINS(?VenueId,""","'",str(venueId),"'",""") }
+               FILTER CONTAINS(?publicationVenue,""","'",str(venueId),"'",""") }
                                    
                 """]
         stringa = ("".join(query))
@@ -436,8 +479,10 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                                     WHERE { ?publication schema:isPartOf ?publicationVenue.
                                         ?publicationVenue schema:identifier ?VenueId.
                                             
-                                            ?publication schema:author ?author_single .
-                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                            ?publication schema:author ?author_single_uri .
+                                            ?author_single_uri schema:identifier ?author_single.
+                                            OPTIONAL{?publication cito:cites ?cited_pub_uri.
+                                                    ?cited_pub_uri schema:identifier ?cited_pub. }
                                            
                                       FILTER CONTAINS(?VenueId,""","'",str(venueId),"'",""")  }
                                   
@@ -459,14 +504,14 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                 prefix dcterms: <http://purl.org/dc/terms/> 
                 prefix fabio: <http://purl.org/spar/fabio/> 
                 SELECT ?publication ?id ?title ?publicationVenue  ?publication_year
-               WHERE {?publication schema:isPartOf ?publicationVenue;
+               WHERE {?publication schema:isPartOf ?publicationVenueUri;
                                   schema:datePublished ?publication_year.
-                      ?publicationVenue schema:identifier ?VenueId.
+                      ?publicationVenueUri schema:identifier ?publicationVenue.
                       ?publication dcterms:title ?title;
                                     schema:issueNumber ""","'",str(issue),"'",""";
                                     schema:volumeNumber""","'",str(volume),"'",""";
                                    schema:identifier ?id.
-               FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""") }
+               FILTER CONTAINS(?publicationVenue,""","'",str(journalId),"'",""") }
                                    
                 """]
         stringa = ("".join(query))
@@ -481,10 +526,11 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                                     WHERE { ?publication schema:isPartOf ?publicationVenue.
                                         ?publicationVenue schema:identifier ?VenueId.
                                             
-                                            ?publication schema:author ?author_single ;
+                                            ?publication schema:author ?author_single_uri ;
                                  schema:issueNumber ""","'",str(issue),"'",""";
-                                    schema:volumeNumber""","'",str(volume),"'",""";
-                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                    schema:volumeNumber""","'",str(volume),"'",""".
+                                    ?author_single_uri schema:identifier ?author_single.
+                                            OPTIONAL{?publication cito:cites ?cited_pub_uri. ?cited_pub_uri schema:identifier ?cited_pub.}
                                            
                                       FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""")  }
                                   
@@ -494,6 +540,8 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         df_sparql2=get(self.endpointUrl, stringa_au_cit, True)
         df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
         df_sparql = df_sparql.fillna('')
+        df_sparql['issue']=str(issue)
+        df_sparql['volume']=str(volume)
         return df_sparql
     
     def getJournalArticlesInVolume(self, volume: str, journalId: str):
@@ -503,15 +551,15 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                 prefix dcterms: <http://purl.org/dc/terms/> 
                 prefix fabio: <http://purl.org/spar/fabio/> 
                 SELECT ?publication ?id ?title ?publicationVenue ?issue ?publication_year
-               WHERE {?publication schema:isPartOf ?publicationVenue;
+               WHERE {?publication schema:isPartOf ?publicationVenueUri;
                         schema:datePublished ?publication_year.
-                      ?publicationVenue schema:identifier ?VenueId.
+                      ?publicationVenueUri schema:identifier ?publicationVenue.
                       ?publication dcterms:title ?title;
                                     
                                     schema:volumeNumber ""","'",str(volume),"'",""";
                                    schema:identifier ?id.
                     OPTIONAL{?publication schema:issueNumber ?issue.}
-               FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""") }
+               FILTER CONTAINS(?publicationVenue,""","'",str(journalId),"'",""") }
                                    
                 """]
         stringa = ("".join(query))
@@ -526,10 +574,11 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                                     WHERE { ?publication schema:isPartOf ?publicationVenue.
                                         ?publicationVenue schema:identifier ?VenueId.
                                             
-                                            ?publication schema:author ?author_single ;
+                                            ?publication schema:author ?author_single_uri ;
                                  
-                                    schema:volumeNumber ""","'",str(volume),"'",""";
-                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                    schema:volumeNumber ""","'",str(volume),"'",""".
+                                    ?author_single_uri schema:identifier ?author_single.
+                                            OPTIONAL{?publication cito:cites ?cited_pub_uri. ?cited_pub_uri schema:identifier ?cited_pub.}
                                             OPTIONAL{?publication schema:issueNumber ?issue.}
                                            
                                       FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""")  }
@@ -539,6 +588,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         stringa_au_cit = ("".join(query_authors_and_cited))
         df_sparql2=get(self.endpointUrl, stringa_au_cit, True)
         df_sparql=pd.merge(df_sparql,df_sparql2, on='publication')
+        df_sparql['volume']=str(volume)
         df_sparql = df_sparql.fillna('')
         return df_sparql
     
@@ -549,15 +599,15 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                 prefix dcterms: <http://purl.org/dc/terms/> 
                 prefix fabio: <http://purl.org/spar/fabio/> 
                 SELECT ?publication ?id ?title ?publicationVenue ?issue ?volume ?publication_year
-               WHERE {?publication schema:isPartOf ?publicationVenue;
+               WHERE {?publication schema:isPartOf ?publicationVenueUri;
                schema:datePublished ?publication_year.
-                       ?publicationVenue rdf:type fabio:Journal.
-                      ?publicationVenue schema:identifier ?VenueId.
+                       ?publicationVenueUri rdf:type fabio:Journal.
+                      ?publicationVenueUri schema:identifier ?publicationVenue.
                       ?publication dcterms:title ?title;
                                    schema:identifier ?id.
                      OPTIONAL {?publication schema:issueNumber ?issue.}
                      OPTIONAL {?publication schema:volumeNumber ?volume.}
-               FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""") }
+               FILTER CONTAINS(?publicationVenue,""","'",str(journalId),"'",""") }
                                    
                 """]
         stringa = ("".join(query))
@@ -573,8 +623,10 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                                         ?publicationVenue schema:identifier ?VenueId.
                                         ?publicationVenue rdf:type fabio:Journal.
                                             
-                                            ?publication schema:author ?author_single .
-                                            OPTIONAL{?publication cito:cites ?cited_pub.}
+                                            ?publication schema:author ?author_single_uri . 
+                                 ?author_single_uri schema:identifier ?author_single.
+                                            OPTIONAL{?publication cito:cites ?cited_pub_uri.
+                                  ?cited_pub_uri schema:identifier ?cited_pub.}
                                            
                                       FILTER CONTAINS(?VenueId,""","'",str(journalId),"'",""")  }
                                   
@@ -627,6 +679,7 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
         stringa = ("".join(query))
         df_sparql=get(self.endpointUrl, stringa, True)
         df_sparql = df_sparql.fillna('')
+        df_sparql=df_sparql.drop_duplicates(subset='PersonId')
         return df_sparql
 
     def getPublicationsByAuthorName(self, authorPartialName: str):
@@ -642,7 +695,8 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                                schema:identifier ?id;
                                dcterms:title ?title;
                                schema:datePublished  ?publication_year;
-                               schema:isPartOf ?publicationVenue.
+                               schema:isPartOf ?publicationVenueUri.
+                        ?publicationVenueUri schema:identifier ?publicationVenue.
                      ?author schema:givenName ?givenName;
                              schema:familyName ?familyName.
                                                        
@@ -667,16 +721,17 @@ class TriplestoreQueryProcessor(TriplestoreProcessor):
                                     prefix fabio: <http://purl.org/spar/fabio/> 
                                     SELECT ?publication (GROUP_CONCAT(DISTINCT ?author_single;separator=" ") AS ?author) (GROUP_CONCAT(DISTINCT ?cited_pub;separator=", ") AS ?cited)
                                    WHERE {
-                      {?publication schema:author ?author_single.
-                     ?author_single schema:givenName ?givenName;
+                      {?publication schema:author ?author_single_uri.
+                     ?author_single_uri schema:givenName ?givenName;
                              schema:familyName ?familyName.
+                              ?author_single_uri schema:identifier ?author_single.   
                                  
                                  
                                             OPTIONAL{?publication cito:cites ?cited_pub.}
                                                        
                               FILTER CONTAINS( LCASE(?givenName), """, str("'"+authorPartialName+"'"), """) }
-                      UNION {?publication schema:author ?author_single.
-                     ?author_single schema:givenName ?givenName;
+                      UNION {?publication schema:author ?author_single_uri.
+                     ?author_single_uri schema:givenName ?givenName;
                              schema:familyName ?familyName.
                                  OPTIONAL{?publication cito:cites ?cited_pub.}
                                                        

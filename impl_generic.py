@@ -48,14 +48,15 @@ class GenericQueryProcessor(object):
 
         for processor in self.queryProcessor:
             q = processor.getMostCitedPublication()
-            result = concat([q, result], ignore_index=True)
+            #print('queryp--------------------',q)
+            result = concat([ result, q], ignore_index=True)
 
         # removing the NaN
         result = result.fillna("")
         result.drop_duplicates(subset="id", keep="first", inplace=True)
 
         result_sorted = result.sort_values(by=["citing_publications"], ascending=False)
-
+        #print(result_sorted)
         first_row = result_sorted.iloc[0]
         max_value = first_row["citing_publications"]
         most_cited_pub = result_sorted[result_sorted["citing_publications"] == max_value]
@@ -80,7 +81,7 @@ class GenericQueryProcessor(object):
         result.drop_duplicates(subset="VenueId", keep="first", inplace=True)
 
         result_sorted = result.sort_values(by=["citing_publications"], ascending=False)
-
+        #print(result_sorted)
         first_row = result_sorted.iloc[0]
 
         venue_obj=processor.getVenue(first_row['VenueId'])
