@@ -14,6 +14,8 @@ from rdflib import Literal
 from rdflib.plugins.stores.sparqlstore import SPARQLUpdateStore
 from sparql_dataframe import get
 
+from collections import Counter
+
 class TestGraph(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -21,7 +23,7 @@ class TestGraph(unittest.TestCase):
         self.graph_data = join(self.test_dir, "graph_project_data")
         self.graph_csv = join(self.graph_data, "graph_publications_test.csv")
         self.graph_json = join(self.graph_data, "graph_other_data_test.json")
-        self.endpointUrl='http://10.201.6.200:9999/blazegraph/sparql' #change with the updated Url obtained by launching blazegraph
+        self.endpointUrl=' http://192.168.237.239:9999/blazegraph/sparql' #change with the updated Url obtained by launching blazegraph
         
     
 
@@ -99,24 +101,75 @@ class TestGraph(unittest.TestCase):
   
     def test_getMostCitedPublication(self):
         #self.uploadData()
-        grp_qp = self.instantiateTriQP()
-        df = grp_qp.getMostCitedPublication()
-        dois = str(df['id'])
-        print(dois)
-        #expected_dois = ""
-        #self.assertEqual(dois,expected_dois)
+        with open(self.graph_json, 'r') as file:
+            data = json.load(file)
+            # access references data in the json 
+            # Flatten the list of cited DOIs
+            all_cited_dois = [doi for dois in data['references'].values() for doi in dois]
+
+            # Use Counter to count the occurrences of each DOI
+            doi_counter = Counter(all_cited_dois)
+
+            if doi_counter:
+                # Find the maximum count
+                max_citations = max(doi_counter.values())
+
+                # Get all DOIs with the maximum number of citations
+                publications_with_max_citations = [doi for doi, count in doi_counter.items() if count == max_citations]
+
+                
+            grp_qp = self.instantiateTriQP()
+            df = grp_qp.getMostCitedPublication()
+
+            #check if the result of the query has the same dois as the ones obtained 
+            #accessing the json data . Dois are in a list so if more of them have the max
+            # number of citations they are returned together
+            self.assertTrue(df['id'].tolist()==publications_with_max_citations)
+
+        
 
        
 
     def test_getMostCitedVenue(self):
         #self.uploadData()
+        
+        
+        with open(self.graph_json, 'r') as file:
+            data = json.load(file)
+            all_cited_venues=[]
+            # access references data in the json 
+            # Flatten the list of cited DOIs
+            all_cited_dois = [doi for dois in data['references'].values() for doi in dois]
+            #print(all_cited_dois)
+            
+            for doi in all_cited_dois:
+               
+            
+              if doi in data['venues_id'].keys() :
+                 
+                venue_id=data['venues_id'][doi]
+                if len(venue_id)>1:
+                    venue_id= (' ').join(venue_id)
+                    all_cited_venues.append(venue_id)
+                elif len(venue_id)==1:
+                    all_cited_venues.append(venue_id[0])
+            
+            venue_counter = Counter(all_cited_venues)
+
+            if venue_counter:
+                # Find the maximum count
+                max_citations = max(venue_counter.values())
+
+                # Get all DOIs with the maximum number of citations
+                venues_with_max_citations = [doi for doi, count in venue_counter.items() if count == max_citations]
+        
+            
+        #print(all_cited_venues)
         grp_qp = self.instantiateTriQP()
         df = grp_qp.getMostCitedVenue()
-        venues_id = str(df['VenueId'])
-        print(venues_id)
-        #expected_venues_id = ''
-        #self.assertEqual(venues_id, expected_venues_id)
-
+        print (df)
+        
+        self.assertTrue(df['VenueId'].tolist()==venues_with_max_citations)
     
 
     
