@@ -49,7 +49,7 @@ class TestGraph(unittest.TestCase):
               PREFIX cito:<http://purl.org/spar/cito/> 
               prefix dcterms: <http://purl.org/dc/terms/> 
               prefix fabio: <http://purl.org/spar/fabio/>  
-              SELECT ?internalID ?id ?title ?publicationVenue ?publication_year ?author ?cited 
+              SELECT DISTINCT ?internalID ?id 
               WHERE{ ?internalID schema:identifier ?id;  
                 schema:author ?authoruri;  
                 dcterms:title ?title; 
@@ -60,6 +60,7 @@ class TestGraph(unittest.TestCase):
                   OPTIONAL{?internalID cito:cites ?cited_pub. ?cited_pub schema:identifier ?cited.}  }'''
         df_final = get (self.endpointUrl, query, True)
         df_final = df_final.fillna('')
+        
         #expected= ['doi:10.1016/j.websem.2021.100655','doi:10.1007/s10115-017-1100-y','doi:10.1016/j.websem.2014.03.003',
          #          'doi:10.1093/nar/gkz997', 'doi:10.3390/publications7030050','doi:10.1017/s0269888920000065',
          #          'doi:10.3390/info11030129','doi:10.1007/s00778-018-0528-3', ...]
@@ -167,7 +168,7 @@ class TestGraph(unittest.TestCase):
         #print(all_cited_venues)
         grp_qp = self.instantiateTriQP()
         df = grp_qp.getMostCitedVenue()
-        print (df)
+        #print (df)
         
         self.assertTrue(df['VenueId'].tolist()==venues_with_max_citations)
     
