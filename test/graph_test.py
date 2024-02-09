@@ -23,7 +23,7 @@ class TestGraph(unittest.TestCase):
         self.graph_data = join(self.test_dir, "graph_project_data")
         self.graph_csv = join(self.graph_data, "graph_publications_test.csv")
         self.graph_json = join(self.graph_data, "graph_other_data_test.json")
-        self.endpointUrl=' http://192.168.237.239:9999/blazegraph/sparql' #change with the updated Url obtained by launching blazegraph
+        self.endpointUrl='http://10.250.13.195:9999/blazegraph/sparql' #change with the updated Url obtained by launching blazegraph
         
     
 
@@ -160,7 +160,7 @@ class TestGraph(unittest.TestCase):
                 # Find the maximum count
                 max_citations = max(venue_counter.values())
 
-                # Get all DOIs with the maximum number of citations
+                # Get all venues with the maximum number of citations
                 venues_with_max_citations = [doi for doi, count in venue_counter.items() if count == max_citations]
         
             
@@ -266,8 +266,9 @@ class TestGraph(unittest.TestCase):
         expected_crossref_ids = ['crossref:78', 'crossref:297', 'crossref:286']
         self.assertTrue(crossref_ids.tolist() == expected_crossref_ids)
 
-    
-#run from terminal:
+
+# update the blazegraph url in the variable  
+#then run from terminal:
 #cd + path to repo        
 #python -m unittest discover -s test -p "graph_test.py"
 
